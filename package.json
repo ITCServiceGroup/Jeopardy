@@ -1,0 +1,98 @@
+{
+  "name": "itc-jeopardy",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "# Setup": "",
+    "setup": "node scripts/setup-db.js # Initial project setup",
+    "setup:dev": "NODE_ENV=development node scripts/setup-db.js # Setup development environment",
+    "setup:prod": "NODE_ENV=production node scripts/setup-db.js # Setup production environment",
+    "# Development": "",
+    "dev": "vite # Start development server",
+    "build": "vite build # Build for production",
+    "preview": "vite preview # Preview production build",
+    "# Deployment": "",
+    "deploy": "gh-pages -d dist # Deploy to GitHub Pages",
+    "deploy:prod": "NODE_ENV=production npm run build && npm run deploy # Production deployment",
+    "# Testing": "",
+    "test": "vitest # Run tests in watch mode",
+    "test:coverage": "vitest run --coverage # Run tests with coverage",
+    "# Code Quality": "",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext js,jsx --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
+    "prepare": "husky install",
+    "precommit": "lint-staged",
+    "# Database Development": "",
+    "db:migrate": "node scripts/migrate.js # Apply database migrations",
+    "db:seed": "node scripts/seed.js # Load test data",
+    "db:reset": "node scripts/reset.js # Reset database schema",
+    "db:watch": "node scripts/watch-db.js # Monitor database changes",
+    "db:reset-with-seed": "WITH_SEED=true node scripts/reset.js # Reset and seed database",
+    "# Database Backup": "",
+    "db:backup": "node scripts/backup-db.js # Database backup tool",
+    "db:backup:create": "node scripts/backup-db.js create # Create new backup",
+    "db:backup:list": "node scripts/backup-db.js list # List available backups",
+    "db:backup:restore": "node scripts/backup-db.js restore # Restore from backup",
+    "db:backup:clean": "node scripts/backup-db.js clean # Clean old backups",
+    "# Database Production": "",
+    "db:migrate:prod": "NODE_ENV=production node scripts/migrate.js # Production migration",
+    "db:backup:prod": "NODE_ENV=production node scripts/backup-db.js # Production backup",
+    "db:restore:prod": "NODE_ENV=production node scripts/backup-db.js restore # Production restore"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.4.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/coverage-v8": "^0.34.6",
+    "eslint": "^8.53.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "gh-pages": "^6.1.0",
+    "husky": "^8.0.3",
+    "jsdom": "^22.1.0",
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.1.0",
+    "vite": "^5.0.0",
+    "vitest": "^0.34.6"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,md,json}": [
+      "prettier --write"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

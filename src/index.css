@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-font: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --display-font: 'Orbitron', sans-serif;
+  --bg-color: #000033;
+  --accent-color: #ffcc00;
+  
+  font-family: var(--primary-font);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(to bottom, transparent 50%, rgba(0, 0, 51, 0.5) 100%),
+    radial-gradient(circle at center, rgba(0, 0, 102, 0.2) 0%, transparent 70%),
+    repeating-linear-gradient(45deg, rgba(0, 0, 102, 0.1) 0px, rgba(0, 0, 102, 0.1) 2px, transparent 2px, transparent 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Selection styles */
+::selection {
+  background-color: var(--accent-color);
+  color: var(--bg-color);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 51, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #000099;
+  border-radius: 6px;
+  border: 2px solid #000033;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0000cc;
+}

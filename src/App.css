@@ -1,0 +1,517 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.app::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: radial-gradient(circle at center, rgba(0, 0, 153, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+h1 {
+  color: #ffcc00;
+  text-transform: uppercase;
+  font-size: 2.5rem;
+  margin: 0;
+  padding: 20px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Player Setup Screen */
+.player-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 2rem;
+  padding: 20px;
+  position: relative;
+  animation: setupFadeIn 0.8s ease;
+}
+
+.player-setup::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 153, 0.3) 0%, transparent 70%);
+  animation: gradientPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Admin Link Styles */
+.admin-link {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #000066 0%, #000099 100%);
+  color: #ffcc00;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-link:hover {
+  background: linear-gradient(135deg, #000099 0%, #0000cc 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.admin-link:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .admin-link {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+.player-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+  animation: inputsSlideUp 0.8s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  animation-delay: 0.3s;
+}
+
+.player-inputs input {
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #2c3e50;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+@keyframes setupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes inputsSlideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientPulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.player-inputs input:focus {
+  border-color: #94a3b8;
+  box-shadow: 0 0 5px rgba(148, 163, 184, 0.2);
+}
+
+.player-inputs input::placeholder {
+  color: #94a3b8;
+}
+
+.player-inputs button {
+  background: linear-gradient(90deg, #ffcc00, #ffd700);
+  margin-top: 1rem;
+  padding: 1rem;
+  font-size: 1.3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  animation: buttonPop 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  animation-delay: 0.6s;
+}
+
+.player-inputs button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: rotate(45deg);
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.player-inputs button:hover {
+  background: linear-gradient(90deg, #ffd700, #ffe44d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 204, 0, 0.4);
+}
+
+.player-inputs button:hover::before {
+  opacity: 1;
+  transform: rotate(45deg) translate(50%, 50%);
+}
+
+@keyframes buttonPop {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Game End Screen */
+.game-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 2rem;
+  padding: 20px;
+  animation: gameEndFadeIn 1s ease;
+}
+
+@keyframes gameEndFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.final-scores {
+  display: flex;
+  gap: 3rem;
+  margin: 2rem 0;
+  animation: slideUp 0.8s ease forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.final-scores .player-score {
+  background: linear-gradient(135deg, #000066 0%, #000099 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  min-width: 200px;
+  box-shadow: 0 4px 20px rgba(0, 0, 153, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.final-scores .player-score::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.final-scores h2 {
+  color: #ffcc00;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+  animation: glowText 1.5s ease-in-out infinite alternate;
+}
+
+.final-scores p {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  font-family: var(--display-font);
+}
+
+.winner {
+  color: #ffcc00;
+  font-size: 3.5rem;
+  margin: 1rem 0;
+  animation: winner-appear 0.5s ease forwards,
+             winner-pulse 2s infinite;
+  opacity: 0;
+  transform: scale(0.5);
+  animation-delay: 1.2s;
+  text-shadow: 0 0 20px rgba(255, 204, 0, 0.5),
+               0 0 40px rgba(255, 204, 0, 0.3),
+               0 0 60px rgba(255, 204, 0, 0.2);
+}
+
+@keyframes winner-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glowText {
+  from {
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+  }
+  to {
+    text-shadow: 0 0 20px rgba(255, 204, 0, 0.8),
+                 0 0 30px rgba(255, 204, 0, 0.4);
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.play-again {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffcc00, #ffd700);
+  color: #000033;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: playAgainAppear 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  animation-delay: 1.5s;
+}
+
+.play-again::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: rotate(45deg);
+  transition: all 0.5s ease;
+  opacity: 0;
+}
+
+.play-again:hover {
+  background: linear-gradient(90deg, #ffd700, #ffe44d);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4),
+              0 0 30px rgba(255, 204, 0, 0.2);
+}
+
+.play-again:hover::before {
+  opacity: 1;
+  transform: rotate(45deg) translate(50%, 50%);
+}
+
+@keyframes playAgainAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error Message */
+.error-message {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 2px solid #ff0000;
+  color: #ff0000;
+  padding: 10px 20px;
+  border-radius: 4px;
+  margin: 10px auto;
+  max-width: 400px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Selected Tech Type Display */
+.selected-tech {
+  text-align: center;
+  background: rgba(0, 0, 153, 0.1);
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.selected-tech h3 {
+  color: #ffcc00;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.player-names {
+  margin: 1.5rem 0;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.player-names p {
+  margin: 0.5rem 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Common Button Styles */
+button {
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #ffcc00;
+  color: #000033;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #ffd633;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(255, 204, 0, 0.3);
+}
+
+button:focus {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes winner-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+    text-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  #root {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    padding: 15px 0;
+  }
+
+  .player-inputs {
+    max-width: 280px;
+  }
+
+  .player-inputs input,
+  button {
+    padding: 10px;
+    font-size: 1rem;
+  }
+
+  .final-scores {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .final-scores .player-score {
+    padding: 1rem;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .winner {
+    font-size: 2rem;
+  }
+}

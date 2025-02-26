@@ -1,0 +1,248 @@
+.tech-type-selector {
+  text-align: center;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 2rem auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-type-selector h2 {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tech-type-selector p {
+  color: #505d6b;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.player-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem auto;
+  max-width: 400px;
+}
+
+.player-input {
+  padding: 1rem;
+  background-color: #fcfcfd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.player-input:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.player-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.player-input input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.player-input input:focus {
+  outline: none;
+  border-color: #94a3b8;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
+}
+
+.player-input input::placeholder {
+  color: #adb5bd;
+}
+
+.tech-type-buttons {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.tech-type-button {
+  padding: 1.5rem 3rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 220px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-type-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.tech-type-button .button-description {
+  font-size: 0.9rem;
+  font-weight: normal;
+  text-transform: none;
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+.tech-type-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tech-type-button:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tech-type-button.install {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.tech-type-button.install:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.tech-type-button.service {
+  background-color: #3498db;
+  color: white;
+}
+
+.tech-type-button.service:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.error-message {
+  background-color: #fff3f3;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.error-message button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.error-message button:hover {
+  background-color: #c0392b;
+  transform: translateY(-1px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.tech-type-button:focus:not(:disabled) {
+  animation: pulse 1s;
+  outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tech-type-selector {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .tech-type-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .tech-type-button {
+    width: 100%;
+    padding: 1.25rem;
+    font-size: 1.1rem;
+  }
+
+  .tech-type-selector h2 {
+    font-size: 1.5rem;
+  }
+
+  .tech-type-selector p {
+    font-size: 1rem;
+  }
+
+  .player-input {
+    padding: 1rem;
+    margin: 0;
+  }
+
+  .player-input input {
+    max-width: 100%;
+  }
+}
