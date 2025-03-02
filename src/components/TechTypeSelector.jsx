@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase, createGameSession } from '../utils/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import '../styles/TechTypeSelector.css';
 
@@ -41,11 +41,19 @@ const TechTypeSelector = ({ onSelect }) => {
     setError(null);
 
     try {
-      // Pass tech type and player names to parent
+      // Create a new game session
+      const gameSession = await createGameSession(
+        player1Name.trim(),
+        player2Name.trim(),
+        techType.id
+      );
+
+      // Pass tech type, game session, and player names to parent
       onSelect({
         techType,
-        player1Name,
-        player2Name
+        gameSession,
+        player1Name: player1Name.trim(),
+        player2Name: player2Name.trim()
       });
     } catch (err) {
       setError('Error starting game: ' + err.message);
@@ -53,7 +61,7 @@ const TechTypeSelector = ({ onSelect }) => {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading game options..." />;
+  if (loading) return <LoadingSpinner message="Loading game options..." theme="light" />;
 
   if (error) {
     return (
@@ -115,7 +123,7 @@ const TechTypeSelector = ({ onSelect }) => {
 
       {selectedType && (
         <div className="loading-overlay">
-          <LoadingSpinner message={`Preparing ${selectedType.name} Tech Challenge...`} />
+          <LoadingSpinner message={`Preparing ${selectedType.name} Tech Challenge...`} theme="light" />
         </div>
       )}
     </div>

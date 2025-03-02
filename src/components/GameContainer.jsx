@@ -7,19 +7,22 @@ import LoadingSpinner from './LoadingSpinner';
 
 const GameContainer = () => {
   const [categories, setCategories] = useState([]);
-  const [score, setScore] = useState(0);
+  const [scores, setScores] = useState({ player1: 0, player2: 0 });
+  const [currentPlayer, setCurrentPlayer] = useState(1);
   const [gameSession, setGameSession] = useState(null);
   const [techType, setTechType] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (techType) {
+    if (techType && gameSession) {
       fetchCategories();
     }
-  }, [techType]);
+  }, [techType, gameSession]);
 
   const fetchCategories = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -39,33 +42,60 @@ const GameContainer = () => {
 
       if (error) throw error;
 
+      if (!data || data.length === 0) {
+        throw new Error('No categories found for this tech type');
+      }
+
       setCategories(data);
     } catch (err) {
       setError('Error loading categories: ' + err.message);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGameTypeSelect = ({ techType: selectedType, gameSession: newSession }) => {
+    if (!selectedType || !newSession) {
+      setError('Invalid game configuration');
+      return;
+    }
+
+    // Reset game state
+    setCategories([]);
+    setScores({ player1: 0, player2: 0 });
+    setCurrentPlayer(1);
+    setError(null);
+    
+    // Set new game configuration
     setTechType(selectedType);
     setGameSession(newSession);
   };
 
   const handleQuestionAnswered = async (correct, points, categoryName) => {
-    // Update score
-    const newScore = score + (correct ? points : -points);
-    setScore(newScore);
+    // Update score for current player
+    const playerKey = `player${currentPlayer}`;
+    const newScores = { 
+      ...scores,
+      [playerKey]: scores[playerKey] + (correct ? points : -points)
+    };
+    setScores(newScores);
+
+    // Switch to other player
+    setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
 
     // Record statistics
     try {
       await supabase.from('game_statistics').insert({
         game_session_id: gameSession.id,
         tech_type_id: techType.id,
-        player_name: gameSession.player_name,
+        player1_name: gameSession.player1_name,
+        player2_name: gameSession.player2_name,
         question_category: categoryName,
         question_value: points,
-        correct
+        correct,
+        current_player: currentPlayer,
+        timestamp: new Date().toISOString()
       });
     } catch (err) {
       console.error('Error recording statistics:', err);
@@ -74,12 +104,14 @@ const GameContainer = () => {
 
   const handleGameEnd = async () => {
     try {
-      // Update game session with final score
+      // Update game session with final scores
       await supabase
         .from('game_sessions')
         .update({ 
           end_time: new Date().toISOString(),
-          final_score: score 
+          player1_score: scores.player1,
+          player2_score: scores.player2,
+          winner: scores.player1 > scores.player2 ? 1 : 2
         })
         .eq('id', gameSession.id);
     } catch (err) {
@@ -87,12 +119,12 @@ const GameContainer = () => {
     }
   };
 
-  if (!techType) {
+  if (!techType || !gameSession) {
     return <TechTypeSelector onSelect={handleGameTypeSelect} />;
   }
 
   if (loading) {
-    return <LoadingSpinner message="Loading game board..." />;
+    return <LoadingSpinner message="Loading Questions..." />;
   }
 
   if (error) {
@@ -108,16 +140,60 @@ const GameContainer = () => {
     <div className="game-container">
       <header>
         <h1>{techType.name} Tech Challenge</h1>
-        <Scoreboard score={score} />
+        <Scoreboard 
+          scores={scores}
+          currentPlayer={currentPlayer}
+          player1Name={gameSession.player1_name}
+          player2Name={gameSession.player2_name}
+        />
       </header>
 
-      <GameBoard
-        categories={categories}
-        onQuestionAnswered={handleQuestionAnswered}
-        onGameEnd={handleGameEnd}
-      />
+      <div>
+        <div className="player-turn">
+          Current Player: {currentPlayer === 1 ? gameSession.player1_name : gameSession.player2_name}
+        </div>
+        <GameBoard
+          categories={categories}
+          onQuestionAnswered={handleQuestionAnswered}
+          onGameEnd={handleGameEnd}
+          currentPlayer={currentPlayer}
+          player1Name={gameSession.player1_name}
+          player2Name={gameSession.player2_name}
+        />
+      </div>
 
       <style jsx>{`
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+          }
+        }
+
+        .player-turn {
+          background: #2563eb;
+          color: white;
+          padding: 0.75rem;
+          text-align: center;
+          font-size: 1.2rem;
+          font-weight: 600;
+          margin-bottom: 2rem;
+          border-radius: 8px;
+          animation: pulse 2s infinite;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+          transition: all 0.3s ease;
+        }
+
+        .player-turn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
         .game-container {
           max-width: 1200px;
           margin: 0 auto;

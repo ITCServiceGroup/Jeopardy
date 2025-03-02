@@ -1,83 +1,107 @@
 .adminDashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #000033 0%, #000066 100%);
-  color: white;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a2533;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 .header {
-  background: rgba(0, 0, 51, 0.5);
-  padding: 2rem;
-  border-bottom: 2px solid #000099;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 .header h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin: 0 0 1.5rem 0;
-  color: #ffcc00;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  color: #1a2533;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .nav {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
   align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.navGroup {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
 }
 
 .navButton {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #000066 0%, #000099 100%);
-  border: none;
-  border-radius: 8px;
-  color: #ffcc00;
+  padding: 1.5rem 3rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #1a2533;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1rem;
-  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 120px;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  min-width: 200px;
+  text-align: center;
 }
 
 .navButton:hover {
-  background: linear-gradient(135deg, #000099 0%, #0000cc 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background-color: #ffffff;
+}
+
+.navButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .navButton.active {
-  background: linear-gradient(135deg, #ffcc00 0%, #ffd700 100%);
-  color: #000033;
-  box-shadow: 0 4px 8px rgba(255, 204, 0, 0.3);
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
 }
 
 .backButton {
-  margin-left: auto;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #cc0000 0%, #ff0000 100%);
-  border: none;
-  border-radius: 8px;
-  color: white;
+  position: absolute;
+  right: 0;
+  padding: 1.5rem 3rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #1a2533;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
+  letter-spacing: 1px;
+  overflow: hidden;
+  min-width: 200px;
+  text-align: center;
 }
 
 .backButton:hover {
-  background: linear-gradient(135deg, #ff0000 0%, #ff3333 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background-color: #ffffff;
+}
+
+.backButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .content {
@@ -86,14 +110,17 @@
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  animation: fadeIn 0.3s ease;
 }
 
 .footer {
-  background: rgba(0, 0, 51, 0.5);
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
   text-align: center;
-  color: #7f8c8d;
-  font-size: 0.9rem;
+  color: #334155;
+  font-size: 1rem;
+  border-top: 1px solid #cbd5e1;
+  margin-top: 2rem;
 }
 
 /* Loading State */
@@ -102,22 +129,37 @@
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  color: #ffcc00;
+  color: #1a2533;
   font-size: 1.2rem;
+  opacity: 0.7;
+  position: relative;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
 }
 
 /* Error State */
 .error {
-  background: rgba(231, 76, 60, 0.1);
-  border: 2px solid #e74c3c;
-  color: #e74c3c;
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1.5rem 0;
   text-align: center;
+  border: 1px solid #dc2626;
+  animation: fadeIn 0.3s ease;
 }
 
-/* Animation for tab transitions */
+/* Animation for transitions */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -129,43 +171,105 @@
   }
 }
 
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .content > * {
   animation: fadeIn 0.3s ease-out;
 }
 
+.navButton:focus:not(:disabled),
+.backButton:focus:not(:disabled) {
+  animation: pulse 1s;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+  .adminDashboard {
+    padding: 1rem;
+  }
+
   .header {
     padding: 1rem;
   }
-
+  
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     margin-bottom: 1rem;
   }
-
+  
   .nav {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
   }
-
+  
   .navButton,
   .backButton {
     width: 100%;
-    text-align: center;
+    min-width: unset;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
   }
-
+  
   .backButton {
+    position: relative;
     margin: 1rem 0 0 0;
+    right: auto;
     justify-content: center;
   }
-
+  
   .content {
     padding: 1rem;
   }
+
+  .footer {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
 }
 
-/* Tab Panel Transitions */
+/* Stats Card Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.statsCard {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid #cbd5e1;
+}
+
+.statsCard h3 {
+  color: #1a2533;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1a2533;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Tab transitions */
 .tabPanel {
   opacity: 0;
   transform: translateY(10px);
@@ -175,32 +279,4 @@
 .tabPanel.active {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* Stats Card Grid */
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.statsCard {
-  background: linear-gradient(135deg, #000066 0%, #000099 100%);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.statsCard h3 {
-  color: #ffcc00;
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-}
-
-.statValue {
-  font-size: 2rem;
-  font-weight: bold;
-  color: white;
-  margin: 0;
 }

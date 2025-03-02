@@ -164,7 +164,7 @@ const CategoryManager = () => {
     });
   };
 
-  if (loading) return <LoadingSpinner message="Loading categories..." />;
+  if (loading) return <LoadingSpinner message="Loading categories..." theme="light" />;
 
   return (
     <div className={styles.categoryManager}>

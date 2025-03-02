@@ -3,9 +3,9 @@
 .scoreboard {
   display: flex;
   justify-content: space-between;
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
+  max-width: 1400px;
+  margin: 10px auto;
+  padding: 15px;
   gap: 20px;
   position: relative;
 }
@@ -31,17 +31,17 @@
   flex: 1;
   background: linear-gradient(135deg, #000066 0%, #000099 100%);
   color: white;
-  padding: 10px 20px;
-  border-radius: 12px;
+  padding: 10px 15px;
+  border-radius: 8px;
   text-align: center;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 153, 0.3);
-  min-width: 250px;
+  min-width: 200px;
   width: 100%;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .score {
@@ -74,8 +74,8 @@
 }
 
 .player-score h2 {
-  margin: 0 0 10px 0;
-  font-size: 1.5rem;
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
   color: #ffcc00;
   font-family: 'Orbitron', sans-serif;
   text-transform: uppercase;
@@ -83,10 +83,10 @@
 }
 
 .score {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
   color: #ffffff;
-  margin: 10px 0;
+  margin: 5px 0;
   font-family: 'Orbitron', sans-serif;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
@@ -99,14 +99,15 @@
 .current-turn {
   background: linear-gradient(90deg, #ffcc00, #ffd700);
   color: #000066;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 5px 10px;
+  border-radius: 12px;
   font-weight: bold;
-  margin-top: 15px;
+  margin-top: 8px;
   display: inline-block;
   position: relative;
   box-shadow: 0 2px 8px rgba(255, 204, 0, 0.3);
   animation: turnPulse 2s infinite;
+  font-size: 0.9rem;
 }
 
 .current-turn::before {

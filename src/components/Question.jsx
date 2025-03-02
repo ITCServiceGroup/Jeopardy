@@ -1,142 +1,200 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import '../styles/Question.css';
 
-const Question = ({ 
-  question, 
-  options, 
-  value, 
-  onAnswer, 
-  onTimeout,
-  isDaily = false 
-}) => {
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [wagerAmount, setWagerAmount] = useState(value);
-  const [wagerSubmitted, setWagerSubmitted] = useState(!isDaily);
-  const [particles, setParticles] = useState([]);
-
-  const createParticles = useCallback(() => {
-    const newParticles = [];
-    for (let i = 0; i < 50; i++) {
-      newParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 4 + 2,
-        speed: Math.random() * 2 + 1,
-        angle: Math.random() * 360,
+const Question = ({ question, onAnswer, onClose, onTimeout, currentPlayer, player1Name, player2Name, value, options, isDaily }) => {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  
+  // Timer and state management
+  useEffect(() => {
+    const timers = new Set();
+    
+    const clearTimers = () => {
+      timers.forEach(timer => {
+        clearTimeout(timer);
+        clearInterval(timer);
       });
+      timers.clear();
+    };
+
+    try {
+      // Auto-close after showing answer
+      if (showAnswer) {
+        console.log('Question answered:', {
+          correct: selectedOption === question?.correctAnswer,
+          category: question?.category,
+          id: question?.id,
+          value,
+          timeLeft
+        });
+
+        const closeTimer = setTimeout(() => {
+          try {
+            onClose?.();
+          } catch (error) {
+            console.error('Auto-close error:', error);
+          }
+        }, 2000);
+        timers.add(closeTimer);
+      }
+
+      // Countdown timer when question is active
+      if (timeLeft > 0 && !showAnswer) {
+        const countdownTimer = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              clearTimers();
+              handleTimeout();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        timers.add(countdownTimer);
+      }
+    } catch (error) {
+      console.error('Timer error:', error);
+      clearTimers();
     }
-    setParticles(newParticles);
+
+    return clearTimers;
+  }, [showAnswer, timeLeft, selectedOption, question?.id, value, onClose]);
+
+  // Reset state on unmount
+  useEffect(() => {
+    return () => {
+      setTimeLeft(0);
+      setShowAnswer(false);
+      setSelectedOption(null);
+    };
   }, []);
 
-  useEffect(() => {
-    if (isDaily && !wagerSubmitted) {
-      createParticles();
-    }
-  }, [isDaily, wagerSubmitted, createParticles]);
-
-  const handleTimeout = useCallback(() => {
-    setIsAnswered(true);
-    onTimeout();
-  }, [onTimeout]);
-
-  useEffect(() => {
-    if (!wagerSubmitted) return;
-
-    if (timeLeft > 0 && !isAnswered) {
-      const timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !isAnswered) {
-      handleTimeout();
-    }
-  }, [timeLeft, isAnswered, wagerSubmitted, handleTimeout]);
-
-  const handleAnswerClick = (answer) => {
-    if (!isAnswered) {
-      setSelectedAnswer(answer);
-      setIsAnswered(true);
-      onAnswer(answer, isDaily ? wagerAmount : value);
+  const handleTimeout = () => {
+    if (!showAnswer) {
+      try {
+        setShowAnswer(true);
+        setTimeLeft(0);
+        onAnswer(false, value, question?.category);
+      } catch (error) {
+        console.error('Error handling timeout:', error);
+      }
     }
   };
 
-  const handleWagerSubmit = (e) => {
-    e.preventDefault();
-    setWagerSubmitted(true);
+  const handleOptionSelect = (option) => {
+    if (!showAnswer) {
+      try {
+        const isCorrect = option === question?.correctAnswer;
+        // Update state atomically
+        setSelectedOption(option);
+        setShowAnswer(true);
+        setTimeLeft(0);
+        // Notify parent component
+        onAnswer(isCorrect, value, question?.category);
+      } catch (error) {
+        console.error('Option select error:', error);
+        // Ensure state is consistent even on error
+        setSelectedOption(option);
+        setShowAnswer(true);
+        setTimeLeft(0);
+      }
+    }
   };
 
-  const timerPercentage = (timeLeft / 15) * 100;
+  // Format time display with leading zeros
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   return (
-    <div className="question-modal">
+    <div 
+      className="question-modal"
+      role="dialog"
+      aria-labelledby="question-title"
+    >
       <div className="question-content">
-        {isDaily && !wagerSubmitted ? (
-          <div className="daily-double-wager">
-            <div className="daily-double">DAILY DOUBLE!</div>
-            {particles.map(particle => (
-              <div
-                key={particle.id}
-                className="particle"
-                style={{
-                  left: `${particle.x}%`,
-                  top: `${particle.y}%`,
-                  width: `${particle.size}px`,
-                  height: `${particle.size}px`,
-                  transform: `rotate(${particle.angle}deg)`,
-                  animationDuration: `${particle.speed}s`
-                }}
-              />
-            ))}
-            <form onSubmit={handleWagerSubmit}>
-              <label>
-                Enter your wager (max {value}mb):
-                <input
-                  type="number"
-                  min={5}
-                  max={value}
-                  value={wagerAmount}
-                  onChange={(e) => setWagerAmount(Number(e.target.value))}
-                />
-              </label>
-              <button type="submit">Start Question</button>
-            </form>
+        <header className="question-header">
+          <div className="category-points" role="group" aria-label="Question details">
+            <span className="category" data-testid="question-category">
+              {question.category}
+            </span>
+            <span className="points" data-testid="question-points">
+              {question.points}
+            </span>
           </div>
-        ) : (
-          <>
-            <div className="question-header">
-              <div className="timer-container">
-                <div 
-                  className="timer-bar" 
-                  style={{ width: `${timerPercentage}%` }}
-                />
-                <div className="timer-text">{timeLeft}s</div>
-              </div>
-              <div className="value">{isDaily ? wagerAmount : value}mb</div>
-            </div>
-            
-            <div className="question-text">
-              <h2>{question}</h2>
-            </div>
+          <div 
+            className="timer" 
+            role="timer" 
+            data-testid="question-timer"
+          >
+            {formatTime(timeLeft)}
+          </div>
+        </header>
 
-            <div className="options-grid">
-              {options.map((option, index) => (
-                <button
-                  key={index}
-                  className={`option-button ${
-                    selectedAnswer === option ? 'selected' : ''
-                  }`}
-                  onClick={() => handleAnswerClick(option)}
-                  disabled={isAnswered}
-                >
-                  {option}
-                </button>
-              ))}
+        <div 
+          className="current-player"
+          role="status"
+          aria-live="polite"
+          data-testid="current-player"
+        >
+          {currentPlayer === 1 ? player1Name : player2Name}'s Turn
+        </div>
+
+        <div className="question-text" data-testid="question-text">
+          {question.question}
+        </div>
+
+        <div className="options">
+          {question.options.map((option, index) => (
+            <button
+              key={index}
+              className={`option ${showAnswer 
+                ? option === question?.correctAnswer
+                  ? 'correct'
+                  : option === selectedOption
+                  ? 'incorrect'
+                  : ''
+                : ''
+              }`}
+              aria-label={`Answer option: ${option}${
+                showAnswer ? (
+                  option === question?.correctAnswer 
+                    ? ' (Correct)' 
+                    : option === selectedOption 
+                      ? ' (Incorrect)' 
+                      : ''
+                ) : ''
+              }`}
+              data-testid={`option-${index}`}
+              data-correct={option === question?.correctAnswer}
+              data-selected={option === selectedOption}
+              onClick={() => handleOptionSelect(option)}
+              disabled={showAnswer}
+              aria-disabled={showAnswer}
+              aria-current={selectedOption === option ? 'true' : undefined}
+              role="radio"
+              aria-checked={selectedOption === option}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+
+        {showAnswer && (
+          <div 
+            className="answer-reveal" 
+            role="alert"
+            aria-live="assertive"
+            data-testid="answer-reveal"
+          >
+            <div className="correct-answer">
+              Correct Answer: {question.correctAnswer}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

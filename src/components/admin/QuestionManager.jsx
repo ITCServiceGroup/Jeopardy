@@ -260,8 +260,8 @@ const QuestionManager = () => {
     setFormData({ ...formData, options: newOptions });
   };
 
-  if (loading) return <LoadingSpinner message="Loading questions..." />;
-  if (filtering) return <LoadingSpinner message="Filtering questions..." />;
+  if (loading) return <LoadingSpinner message="Loading questions..." theme="light" />;
+  if (filtering) return <LoadingSpinner message="Filtering questions..." theme="light" />;
 
   return (
     <div className={styles.questionManager}>

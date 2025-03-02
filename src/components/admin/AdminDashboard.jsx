@@ -25,24 +25,26 @@ const AdminDashboard = () => {
       <header className={styles.header}>
         <h1>Admin Dashboard</h1>
         <nav className={styles.nav}>
-          <button
-            className={`${styles.navButton} ${activeTab === 'categories' ? styles.active : ''}`}
-            onClick={() => setActiveTab('categories')}
-          >
-            Categories
-          </button>
-          <button
-            className={`${styles.navButton} ${activeTab === 'questions' ? styles.active : ''}`}
-            onClick={() => setActiveTab('questions')}
-          >
-            Questions
-          </button>
-          <button
-            className={`${styles.navButton} ${activeTab === 'stats' ? styles.active : ''}`}
-            onClick={() => setActiveTab('stats')}
-          >
-            Statistics
-          </button>
+          <div className={styles.navGroup}>
+            <button
+              className={`${styles.navButton} ${activeTab === 'categories' ? styles.active : ''}`}
+              onClick={() => setActiveTab('categories')}
+            >
+              Categories
+            </button>
+            <button
+              className={`${styles.navButton} ${activeTab === 'questions' ? styles.active : ''}`}
+              onClick={() => setActiveTab('questions')}
+            >
+              Questions
+            </button>
+            <button
+              className={`${styles.navButton} ${activeTab === 'stats' ? styles.active : ''}`}
+              onClick={() => setActiveTab('stats')}
+            >
+              Statistics
+            </button>
+          </div>
           <a
             href="/"
             className={styles.backButton}

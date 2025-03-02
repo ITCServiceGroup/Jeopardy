@@ -13,6 +13,10 @@
   backdrop-filter: blur(5px);
 }
 
+.loading-container.light {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 .loading-spinner {
   width: 80px;
   height: 80px;
@@ -31,6 +35,11 @@
   position: relative;
 }
 
+.light .spinner-ring {
+  border-top-color: #003366;
+  border-right-color: #003366;
+}
+
 .spinner-ring::after {
   content: '';
   position: absolute;
@@ -44,6 +53,11 @@
   border-right-color: #ff9900;
   opacity: 0.7;
   animation: spinnerRotateReverse 0.5s linear infinite;
+}
+
+.light .spinner-ring::after {
+  border-top-color: #004d99;
+  border-right-color: #004d99;
 }
 
 .spinner-ring::before {
@@ -61,6 +75,11 @@
   animation: spinnerRotate 1.5s linear infinite;
 }
 
+.light .spinner-ring::before {
+  border-top-color: #0066cc;
+  border-right-color: #0066cc;
+}
+
 .loading-message {
   color: #ffcc00;
   font-size: 1.8rem;
@@ -75,6 +94,13 @@
   box-shadow: 0 0 20px rgba(0, 0, 51, 0.5);
   min-width: 300px;
   text-align: center;
+}
+
+.light .loading-message {
+  color: #003366;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 20px rgba(0, 51, 102, 0.2);
+  animation: lightMessagePulse 1.5s ease-in-out infinite;
 }
 
 .correct .loading-message {
@@ -129,6 +155,21 @@
   100% {
     opacity: 0.5;
     text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+  }
+}
+
+@keyframes lightMessagePulse {
+  0% {
+    opacity: 0.7;
+    text-shadow: 0 0 10px rgba(0, 51, 102, 0.3);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(0, 51, 102, 0.5);
+  }
+  100% {
+    opacity: 0.7;
+    text-shadow: 0 0 10px rgba(0, 51, 102, 0.3);
   }
 }
 
