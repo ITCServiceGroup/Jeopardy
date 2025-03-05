@@ -2,77 +2,74 @@ import { useState, useEffect } from 'react';
 import '../styles/Question.css';
 
 const Question = ({ question, onAnswer, onClose, onTimeout, currentPlayer, player1Name, player2Name, value, options, isDaily }) => {
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [timeoutRef, setTimeoutRef] = useState(null);
+  const [countdownRef, setCountdownRef] = useState(null);
   
   // Timer and state management
   useEffect(() => {
-    const timers = new Set();
-    
-    const clearTimers = () => {
-      timers.forEach(timer => {
-        clearTimeout(timer);
-        clearInterval(timer);
-      });
-      timers.clear();
+    const cleanup = () => {
+      if (timeoutRef) clearTimeout(timeoutRef);
+      if (countdownRef) clearInterval(countdownRef);
     };
 
     try {
       // Auto-close after showing answer
-      if (showAnswer) {
+      if (isConfirmed) {
         console.log('Question answered:', {
-          correct: selectedOption === question?.correctAnswer,
+          correct: isAnswerCorrect(),
           category: question?.category,
           id: question?.id,
           value,
           timeLeft
         });
 
-        const closeTimer = setTimeout(() => {
+        setTimeoutRef(setTimeout(() => {
           try {
             onClose?.();
           } catch (error) {
             console.error('Auto-close error:', error);
           }
-        }, 2000);
-        timers.add(closeTimer);
+        }, 2000));
       }
 
       // Countdown timer when question is active
       if (timeLeft > 0 && !showAnswer) {
-        const countdownTimer = setInterval(() => {
+        setCountdownRef(setInterval(() => {
           setTimeLeft(prev => {
             if (prev <= 1) {
-              clearTimers();
+              cleanup();
               handleTimeout();
               return 0;
             }
             return prev - 1;
           });
-        }, 1000);
-        timers.add(countdownTimer);
+        }, 1000));
       }
     } catch (error) {
       console.error('Timer error:', error);
-      clearTimers();
+      cleanup();
     }
 
-    return clearTimers;
-  }, [showAnswer, timeLeft, selectedOption, question?.id, value, onClose]);
+    return cleanup;
+  }, [showAnswer, timeLeft, isConfirmed, question?.id, value, onClose]);
 
   // Reset state on unmount
   useEffect(() => {
     return () => {
       setTimeLeft(0);
       setShowAnswer(false);
-      setSelectedOption(null);
+      setSelectedOptions([]);
     };
   }, []);
 
   const handleTimeout = () => {
-    if (!showAnswer) {
+    if (!isConfirmed) {
       try {
+        setIsConfirmed(true);
         setShowAnswer(true);
         setTimeLeft(0);
         onAnswer(false, value, question?.category);
@@ -82,27 +79,58 @@ const Question = ({ question, onAnswer, onClose, onTimeout, currentPlayer, playe
     }
   };
 
+  const isAnswerCorrect = () => {
+    if (!question) return false;
+
+    switch (question.question_type) {
+      case 'multiple_choice':
+      case 'true_false':
+        return selectedOptions[0] === question.correct_answers[0];
+      case 'check_all':
+        const selected = [...selectedOptions].sort();
+        const correct = [...question.correct_answers].sort();
+        return selected.length === correct.length && 
+          selected.every((value, index) => value === correct[index]);
+      default:
+        return false;
+    }
+  };
+
   const handleOptionSelect = (option) => {
-    if (!showAnswer) {
+    if (!isConfirmed) {
       try {
-        const isCorrect = option === question?.correctAnswer;
-        // Update state atomically
-        setSelectedOption(option);
-        setShowAnswer(true);
-        setTimeLeft(0);
-        // Notify parent component
-        onAnswer(isCorrect, value, question?.category);
+        switch (question.question_type) {
+          case 'multiple_choice':
+          case 'true_false':
+            setSelectedOptions([option]);
+            break;
+          case 'check_all':
+            setSelectedOptions(prev => 
+              prev.includes(option)
+                ? prev.filter(o => o !== option)
+                : [...prev, option]
+            );
+            break;
+        }
       } catch (error) {
         console.error('Option select error:', error);
-        // Ensure state is consistent even on error
-        setSelectedOption(option);
-        setShowAnswer(true);
-        setTimeLeft(0);
       }
     }
   };
 
-  // Format time display with leading zeros
+  const handleConfirm = () => {
+    if (!isConfirmed && selectedOptions.length > 0) {
+      try {
+        const isCorrect = isAnswerCorrect();
+        setIsConfirmed(true);
+        setShowAnswer(true);
+        setTimeLeft(0);
+        onAnswer(isCorrect, value, question?.category);
+      } catch (error) {
+        console.error('Confirm error:', error);
+      }
+    }
+  };
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
@@ -152,32 +180,50 @@ const Question = ({ question, onAnswer, onClose, onTimeout, currentPlayer, playe
           {question.options.map((option, index) => (
             <button
               key={index}
-              className={`option ${showAnswer 
-                ? option === question?.correctAnswer
-                  ? 'correct'
-                  : option === selectedOption
-                  ? 'incorrect'
-                  : ''
-                : ''
+              className={`option ${
+                showAnswer
+                  ? (question.question_type === 'check_all'
+                    ? question.correct_answers.includes(option)
+                      ? 'correct'
+                      : selectedOptions.includes(option)
+                        ? 'incorrect'
+                        : ''
+                    : option === question.correct_answers[0]
+                      ? 'correct'
+                      : selectedOptions.includes(option)
+                        ? 'incorrect'
+                        : '')
+                  : selectedOptions.includes(option)
+                    ? 'selected'
+                    : ''
               }`}
               aria-label={`Answer option: ${option}${
                 showAnswer ? (
-                  option === question?.correctAnswer 
-                    ? ' (Correct)' 
-                    : option === selectedOption 
-                      ? ' (Incorrect)' 
-                      : ''
+                  question.question_type === 'check_all'
+                    ? question.correct_answers.includes(option)
+                      ? ' (Correct)'
+                      : selectedOptions.includes(option)
+                        ? ' (Incorrect)'
+                        : ''
+                    : option === question.correct_answers[0]
+                      ? ' (Correct)'
+                      : selectedOptions.includes(option)
+                        ? ' (Incorrect)'
+                        : ''
                 ) : ''
               }`}
               data-testid={`option-${index}`}
-              data-correct={option === question?.correctAnswer}
-              data-selected={option === selectedOption}
+              data-correct={question.question_type === 'check_all'
+                ? question.correct_answers.includes(option)
+                : option === question.correct_answers[0]}
+              data-selected={selectedOptions.includes(option)}
+              data-confirmed={isConfirmed}
               onClick={() => handleOptionSelect(option)}
-              disabled={showAnswer}
-              aria-disabled={showAnswer}
-              aria-current={selectedOption === option ? 'true' : undefined}
-              role="radio"
-              aria-checked={selectedOption === option}
+              disabled={isConfirmed}
+              aria-disabled={isConfirmed}
+              aria-current={selectedOptions.includes(option) ? 'true' : undefined}
+              role={question.question_type === 'check_all' ? 'checkbox' : 'radio'}
+              aria-checked={selectedOptions.includes(option)}
             >
               {option}
             </button>
@@ -192,9 +238,21 @@ const Question = ({ question, onAnswer, onClose, onTimeout, currentPlayer, playe
             data-testid="answer-reveal"
           >
             <div className="correct-answer">
-              Correct Answer: {question.correctAnswer}
+              {question.question_type === 'check_all' 
+                ? `Correct Answers: ${question.correct_answers.join(', ')}` 
+                : `Correct Answer: ${question.correct_answers[0]}`}
             </div>
           </div>
+        )}
+
+        {!isConfirmed && selectedOptions.length > 0 && (
+          <button 
+            className="confirm-button" 
+            onClick={handleConfirm}
+            data-testid="confirm-answer"
+          >
+            Confirm Answer
+          </button>
         )}
       </div>
     </div>

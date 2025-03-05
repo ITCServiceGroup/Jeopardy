@@ -3,26 +3,36 @@ import { supabase } from '../../utils/supabase';
 import LoadingSpinner from '../LoadingSpinner';
 import styles from './QuestionManager.module.css';
 
+const VALID_POINTS = [200, 400, 600, 800, 1000];
+const QUESTION_TYPES = [
+  { value: 'all', label: 'All Types' },
+  { value: 'multiple_choice', label: 'Multiple Choice' },
+  { value: 'check_all', label: 'Check All That Apply' },
+  { value: 'true_false', label: 'True/False' }
+];
+
 const QuestionManager = () => {
   const [questions, setQuestions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [techTypes, setTechTypes] = useState([]);
   const [selectedTechType, setSelectedTechType] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedQuestionType, setSelectedQuestionType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [filtering, setFiltering] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     category_id: '',
     question: '',
-    answer: '',
-    options: ['', '', ''], // Reduced to 3 options for incorrect answers
-    points: '200'
+    question_type: 'multiple_choice',
+    correct_answers: [],
+    options: ['', '', '', ''],
+    points: 200 // Must be one of VALID_POINTS values
   });
 
   useEffect(() => {
     fetchData();
-  }, [selectedTechType, selectedCategory]);
+  }, [selectedTechType, selectedCategory, selectedQuestionType]);
 
   const fetchData = async () => {
     setError(null);
@@ -37,13 +47,7 @@ const QuestionManager = () => {
       if (techTypesError) throw techTypesError;
       setTechTypes(techTypesData);
 
-      // Fetch categories for selected tech type
-      // Debug: log filters
-      console.log('Current filters:', {
-        techType: selectedTechType,
-        category: selectedCategory
-      });
-
+      // Fetch categories
       let categoryQuery = supabase
         .from('categories')
         .select(`
@@ -72,7 +76,8 @@ const QuestionManager = () => {
         id,
         category_id,
         question,
-        answer,
+        question_type,
+        correct_answers,
         options,
         points,
         created_at,
@@ -94,18 +99,12 @@ const QuestionManager = () => {
         .select(baseQuery)
         .order('created_at', { ascending: false });
 
-      // Debug: log initial query state
-      console.log('Initial query state:', questionQuery);
-
       // Apply filters
       if (selectedCategory) {
-        console.log('Applying category filter:', selectedCategory);
         questionQuery = questionQuery.eq('category_id', selectedCategory);
       }
 
       if (selectedTechType !== 'all') {
-        console.log('Applying tech type filter:', selectedTechType);
-        // Create a subquery to get categories with the selected tech type
         const { data: categoryIds } = await supabase
           .from('category_tech_types')
           .select('category_id')
@@ -113,45 +112,31 @@ const QuestionManager = () => {
 
         if (categoryIds) {
           const ids = categoryIds.map(item => item.category_id);
-          console.log('Filtering by category IDs:', ids);
           questionQuery = questionQuery.in('category_id', ids);
         }
       }
 
-      // Debug: log final query
-      console.log('Final query state:', questionQuery);
+      if (selectedQuestionType !== 'all') {
+        questionQuery = questionQuery.eq('question_type', selectedQuestionType);
+      }
 
       const { data: questionsData, error: questionsError } = await questionQuery;
       if (questionsError) throw questionsError;
 
-      // Fetch statistics for each question
+      // Fetch statistics
       const questionsWithStats = await Promise.all(
         questionsData.map(async question => {
-          try {
-            const { data: statsData, error: statsError } = await supabase
-              .from('game_statistics')
-              .select('correct')
-              .eq('question_id', question.id);
+          const { data: statsData, error: statsError } = await supabase
+            .from('game_statistics')
+            .select('correct')
+            .eq('question_id', question.id);
 
-            if (statsError) {
-              console.warn(`Error fetching statistics for question ${question.id}:`, statsError);
-              return {
-                ...question,
-                statistics: []
-              };
-            }
-
-            return {
-              ...question,
-              statistics: statsData || []
-            };
-          } catch (err) {
-            console.warn(`Failed to fetch statistics for question ${question.id}:`, err);
-            return {
-              ...question,
-              statistics: []
-            };
+          if (statsError) {
+            console.warn(`Error fetching statistics for question ${question.id}:`, statsError);
+            return { ...question, statistics: [] };
           }
+
+          return { ...question, statistics: statsData || [] };
         })
       );
 
@@ -177,40 +162,91 @@ const QuestionManager = () => {
     return `${percentage}% (${correct}/${total})`;
   };
 
+  const handleQuestionTypeChange = (e) => {
+    const type = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      question_type: type,
+      options: type === 'true_false' ? ['True', 'False'] : ['', '', '', ''],
+      correct_answers: []
+    }));
+  };
+
+  const handleOptionCheck = (option) => {
+    setFormData(prev => ({
+      ...prev,
+      correct_answers: prev.correct_answers.includes(option)
+        ? prev.correct_answers.filter(a => a !== option)
+        : [...prev.correct_answers, option]
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      // Get incorrect options
-      let incorrectOptions = formData.options
-        .map(opt => opt.trim())
-        .filter(opt => opt !== '');
+      let options;
+      let correct_answers;
 
-      // Validate we have exactly 3 incorrect options
-      if (incorrectOptions.length !== 3) {
-        throw new Error('Please provide exactly 3 incorrect options');
+      switch (formData.question_type) {
+        case 'true_false':
+          options = ['True', 'False'];
+          correct_answers = formData.correct_answers;
+          if (correct_answers.length !== 1) {
+            throw new Error('Please select the correct answer for True/False');
+          }
+          break;
+
+        case 'multiple_choice':
+          // Get all options
+          options = formData.options
+            .map(opt => opt.trim())
+            .filter(opt => opt !== '');
+
+          if (options.length !== 4) {
+            throw new Error('Please provide exactly 4 options');
+          }
+
+          correct_answers = formData.correct_answers;
+          if (correct_answers.length !== 1) {
+            throw new Error('Please select exactly one correct answer');
+          }
+          break;
+
+        case 'check_all':
+          // All options provided and some marked as correct
+          options = formData.options
+            .map(opt => opt.trim())
+            .filter(opt => opt !== '');
+
+          if (options.length !== 4) {
+            throw new Error('Please provide exactly 4 options');
+          }
+
+          correct_answers = formData.correct_answers;
+          if (correct_answers.length === 0) {
+            throw new Error('Please select at least one correct answer');
+          }
+          break;
+
+        default:
+          throw new Error('Invalid question type');
       }
 
-      // Validate incorrect options don't include the correct answer
-      const answer = formData.answer.trim();
-      if (incorrectOptions.includes(answer)) {
-        throw new Error('Incorrect options should not include the correct answer');
+      // Validate points
+      const points = parseInt(formData.points, 10);
+      if (!VALID_POINTS.includes(points)) {
+        throw new Error('Invalid points value. Must be one of: ' + VALID_POINTS.join(', '));
       }
 
-      // Combine and shuffle all options
-      const allOptions = [...incorrectOptions, answer]
-        .sort(() => Math.random() - 0.5);
-
-      // Prepare the data
       const questionData = {
-        category_id: formData.category_id, // Don't parse as int - keep as UUID
+        category_id: formData.category_id,
         question: formData.question.trim(),
-        answer: answer,
-        points: parseInt(formData.points),
-        options: allOptions // Randomized array of all 4 options
+        question_type: formData.question_type,
+        correct_answers,
+        options,
+        points
       };
-
-      console.log('Sending question data:', questionData);
 
       const { data, error } = await supabase
         .from('questions')
@@ -219,20 +255,19 @@ const QuestionManager = () => {
 
       if (error) throw error;
 
-      console.log('Successfully added question:', data);
-
       setFormData({
         category_id: '',
         question: '',
-        answer: '',
-        options: ['', '', ''],
-        points: '200'
+        question_type: 'multiple_choice',
+        correct_answers: [],
+        options: ['', '', '', ''],
+        points: 200
       });
 
       await fetchData();
     } catch (err) {
-      console.error('Detailed error:', err);
       setError('Error adding question: ' + err.message);
+      console.error('Detailed error:', err);
     }
   };
 
@@ -305,6 +340,24 @@ const QuestionManager = () => {
               ))}
             </select>
           </div>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Question Type:</span>
+            <select 
+              className={styles.filterSelect}
+              value={selectedQuestionType}
+              onChange={(e) => {
+                setError(null);
+                setSelectedQuestionType(e.target.value);
+              }}
+              disabled={filtering}
+            >
+              {QUESTION_TYPES.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -334,13 +387,28 @@ const QuestionManager = () => {
           </div>
 
           <div className={styles.formGroup}>
+            <label>Question Type:</label>
+            <select
+              value={formData.question_type}
+              onChange={handleQuestionTypeChange}
+              required
+            >
+              {QUESTION_TYPES.filter(type => type.value !== 'all').map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
             <label>Points:</label>
             <select
               value={formData.points}
-              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value, 10) })}
               required
             >
-              {[200, 400, 600, 800, 1000].map(value => (
+              {VALID_POINTS.map(value => (
                 <option key={value} value={value}>{value}</option>
               ))}
             </select>
@@ -355,34 +423,70 @@ const QuestionManager = () => {
             />
           </div>
 
-          <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-            <label>Answer:</label>
-            <input
-              type="text"
-              value={formData.answer}
-              onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-            <label>Incorrect Options (provide exactly 3):</label>
-            <div className={styles.optionsGrid}>
-              {formData.options.map((option, index) => (
-                <textarea
-                  key={index}
-                  value={option}
-                  onChange={(e) => updateOption(index, e.target.value)}
-                  placeholder={`Incorrect Option ${index + 1}`}
-                  required
-                  rows={3}
-                />
-              ))}
+          {formData.question_type === 'true_false' ? (
+            <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+              <label>Correct Answer:</label>
+              <div className={styles.truefalseOptions}>
+                <label>
+                  <input
+                    type="radio"
+                    name="correct_answer"
+                    value="True"
+                    checked={formData.correct_answers[0] === 'True'}
+                    onChange={() => setFormData({
+                      ...formData,
+                      correct_answers: ['True']
+                    })}
+                  />
+                  True
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="correct_answer"
+                    value="False"
+                    checked={formData.correct_answers[0] === 'False'}
+                    onChange={() => setFormData({
+                      ...formData,
+                      correct_answers: ['False']
+                    })}
+                  />
+                  False
+                </label>
+              </div>
             </div>
-            <small style={{ color: '#666', marginTop: '0.5rem' }}>
-              The correct answer will be randomly inserted among these options
-            </small>
-          </div>
+          ) : (
+            <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+              <label>
+                {formData.question_type === 'check_all' 
+                  ? 'Options (select all correct answers):' 
+                  : 'Options (select one correct answer):'}
+              </label>
+              <div className={styles.optionsGrid}>
+                {formData.options.map((option, index) => (
+                  <div key={index} className={styles.optionWithCheckbox}>
+                    <textarea
+                      value={option}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      required
+                      rows={2}
+                    />
+                    <label>
+                      <input
+                        type={formData.question_type === 'check_all' ? 'checkbox' : 'radio'}
+                        name="correct_answers"
+                        checked={formData.correct_answers.includes(option)}
+                        onChange={() => handleOptionCheck(option)}
+                        disabled={!option.trim()}
+                      />
+                      Correct
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <button type="submit" className={styles.submitButton}>
@@ -410,12 +514,19 @@ const QuestionManager = () => {
             <span className={styles.categoryName}>
               {question.categories?.name}
             </span>
+            <div className={styles.questionType}>
+              Type: {question.question_type.replace(/_/g, ' ')}
+            </div>
             <p className={styles.questionText}>{question.question}</p>
-            <p className={styles.answer}>Answer: {question.answer}</p>
             <div className={styles.optionsList}>
               {question.options.map((option, index) => (
-                <span key={index} className={styles.option}>
-                  {option}
+                <span 
+                  key={index} 
+                  className={`${styles.option} ${
+                    question.correct_answers.includes(option) ? styles.correct : ''
+                  }`}
+                >
+                  {option} {question.correct_answers.includes(option) && '✓'}
                 </span>
               ))}
             </div>
