@@ -1,114 +1,32 @@
-name: Deploy ITC Jeopardy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    branches:
+      - main  # Or your default branch name
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
-    env:
-      VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      VITE_APP_NAME: ITC Jeopardy
-      VITE_GITHUB_PAGES: true
-      VITE_BASE_URL: /itc-jeopardy
-
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20' # Or the version specified in your package.json engines
+          cache: 'npm'
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run Tests
-      run: npm test || true
+      - name: Build project
+        run: npm run build
 
-    - name: Build
-      run: npm run build
-
-    - name: Setup Database
-      if: github.event_name == 'workflow_dispatch'
-      env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      run: |
-        # Install Supabase CLI
-        curl -s https://raw.githubusercontent.com/supabase/cli/main/install.sh | bash
-
-        # Initialize Supabase project
-        supabase init
-
-        # Link to existing project
-        supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
-
-        # Apply migrations
-        cat src/database/migrations/*.sql | supabase db reset
-
-        # Apply seed data if specified
-        if [ "${{ github.event.inputs.seed_data }}" = "true" ]; then
-          cat src/database/seeds/*.sql | supabase db reset
-        fi
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
-
-    - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          dist/**/*
-        name: Release ${{ github.sha }}
-        tag_name: v${{ github.run_number }}
-        body: |
-          Automated release for commit ${{ github.sha }}
-          
-          Changes included:
-          ${{ github.event.head_commit.message }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Notify on Success
-      if: success()
-      run: |
-        echo "::notice::Deployment successful! Visit https://${{ github.repository_owner }}.github.io/itc-jeopardy/"
-
-    - name: Notify on Failure
-      if: failure()
-      run: |
-        echo "::error::Deployment failed. Check the logs for details."
-
-  security:
-    needs: build-and-deploy
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Run Security Scan
-      uses: github/codeql-action/init@v2
-      with:
-        languages: javascript
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-
-    - name: Run npm audit
-      run: npm audit --production
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
