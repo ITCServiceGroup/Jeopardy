@@ -1,0 +1,97 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Base Modal Content */
+.modalContent {
+  padding: 2rem;
+  border-radius: 12px;
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Admin Modal Styles */
+.adminModal {
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Game Modal Styles */
+.gameModal {
+  background: transparent;
+  animation: modalEnter 0.3s ease-out forwards;
+}
+
+/* Base Close Button */
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+/* Admin Close Button */
+.adminCloseButton {
+  color: #4b5563;
+}
+
+.adminCloseButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+}
+
+/* Game Close Button */
+.gameCloseButton {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gameCloseButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.gameCloseButton:active {
+  transform: scale(0.95);
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .modalContent {
+    width: 95%;
+    padding: 1.5rem;
+  }
+}

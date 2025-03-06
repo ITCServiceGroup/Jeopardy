@@ -6,7 +6,6 @@ import Scoreboard from './components/Scoreboard';
 import LoadingSpinner from './components/LoadingSpinner';
 import AdminDashboard from './components/admin/AdminDashboard';
 import TechTypeSelector from './components/TechTypeSelector';
-import { getDailyDoublePositions, isDailyDouble } from './data/questions';
 import { loadGameQuestions, saveGameStatistics } from './utils/supabase';
 import './App.css';
 
@@ -15,7 +14,6 @@ function App() {
   const [scores, setScores] = useState({ player1: 0, player2: 0 });
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [dailyDoublePositions, setDailyDoublePositions] = useState([]);
   const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
   const [gameStarted, setGameStarted] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
@@ -46,7 +44,6 @@ function App() {
           }
           
           setGameQuestions(questions);
-          setDailyDoublePositions(getDailyDoublePositions());
           console.log('Game initialized successfully');
         } catch (error) {
           console.error('Error loading questions:', error);
@@ -64,58 +61,27 @@ function App() {
     if (gameQuestions && answeredQuestions.size === Object.keys(gameQuestions).length * 5) {
       setGameEnded(true);
     }
-  }, [answeredQuestions]);
-
-  const handleQuestionSelect = (category, value) => {
-    if (!gameQuestions || answeredQuestions.has(`${category}-${value}`)) return;
-
-    const isDaily = isDailyDouble(category, value, dailyDoublePositions);
-    setSelectedQuestion({
-      ...gameQuestions[category][value],
-      category,
-      value,
-      isDaily
-    });
-  };
+  }, [answeredQuestions, gameQuestions]);
 
   const handleAnswer = async (correct, points, categoryName, questionId) => {
-    console.log('App - handleAnswer received:', {
-      correct,
-      points,
-      categoryName,
-      currentPlayer,
-      currentScores: scores
-    });
-
     try {
       const questionKey = `${categoryName}-${points}`;
       
-      // Set loading state and message immediately
       const message = correct 
         ? `Correct! ${currentPlayer === 1 ? player1Name : player2Name} gains ${points}mb` 
         : `Incorrect. ${currentPlayer === 1 ? player1Name : player2Name} loses ${points}mb`;
       setLoadingMessage(message);
       setIsLoading(true);
 
-      // Update scores
       const scoreChange = correct ? points : -points;
       const newScores = {
         ...scores,
         [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + scoreChange
       };
       
-      console.log('App - updating score:', {
-        player: currentPlayer,
-        points,
-        scoreChange,
-        oldScore: scores[`player${currentPlayer}`],
-        newScore: newScores[`player${currentPlayer}`]
-      });
-      
       setScores(newScores);
       setAnsweredQuestions(prev => new Set([...prev, questionKey]));
 
-      // Save statistics if it's not a placeholder question
       if (!selectedQuestion?.isPlaceholder) {
         try {
           if (!selectedTechType?.id) {
@@ -126,14 +92,6 @@ function App() {
           if (!actualQuestionId) {
             throw new Error('No valid question ID available');
           }
-
-          console.log('Saving game statistics:', {
-            actualQuestionId,
-            techTypeId: selectedTechType.id,
-            categoryName,
-            points,
-            correct
-          });
           
           await saveGameStatistics(
             player1Name,
@@ -148,52 +106,10 @@ function App() {
         }
       }
 
-      // Show the result message
       await new Promise(resolve => setTimeout(resolve, 2000));
 
     } catch (error) {
       console.error('Error in game flow:', error);
-    } finally {
-      // Clear states and switch players
-      setSelectedQuestion(null);
-      setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
-      setIsLoading(false);
-      setLoadingMessage('');
-    }
-  };
-
-  const handleTimeout = async () => {
-    if (!selectedQuestion) return;
-
-    try {
-      const questionKey = `${selectedQuestion.category}-${selectedQuestion.value}`;
-      
-      setLoadingMessage(`Time's Up! ${currentPlayer === 1 ? player1Name : player2Name} loses ${selectedQuestion.value}mb`);
-      setIsLoading(true);
-
-      const scoreChange = -selectedQuestion.value;
-      const newScores = {
-        ...scores,
-        [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + scoreChange
-      };
-      
-      setScores(newScores);
-      setAnsweredQuestions(prev => new Set([...prev, questionKey]));
-      
-      if (!selectedQuestion.isPlaceholder) {
-        await saveGameStatistics(
-          player1Name,
-          player2Name,
-          selectedTechType.id,
-          selectedQuestion.id,
-          false, // timeout is always incorrect
-          currentPlayer
-        );
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (error) {
-      console.error('Error in timeout flow:', error);
     } finally {
       setSelectedQuestion(null);
       setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
@@ -225,7 +141,6 @@ function App() {
     setScores({ player1: 0, player2: 0 });
     setCurrentPlayer(1);
     setSelectedQuestion(null);
-    setDailyDoublePositions([]);
     setAnsweredQuestions(new Set());
     setGameEnded(false);
     setGameStarted(false);
@@ -333,9 +248,6 @@ function App() {
               player2Name={player2Name}
             />
             <GameBoard 
-              onQuestionSelect={handleQuestionSelect}
-              answeredQuestions={answeredQuestions}
-              questions={gameQuestions}
               categories={Object.keys(gameQuestions || {}).map(categoryName => {
                 const questions = Object.entries(gameQuestions[categoryName] || {}).map(([points, q]) => ({
                   ...q,
@@ -355,20 +267,8 @@ function App() {
               currentPlayer={currentPlayer}
               player1Name={player1Name}
               player2Name={player2Name}
+              scores={scores}
             />
-            {selectedQuestion && (
-              <Question
-                question={selectedQuestion}
-                options={selectedQuestion.options}
-                value={selectedQuestion.value}
-                onAnswer={(correct, points, category) => handleAnswer(correct, points, category, selectedQuestion?.id)}
-                onTimeout={handleTimeout}
-                isDaily={selectedQuestion.isDaily}
-                currentPlayer={currentPlayer}
-                player1Name={player1Name}
-                player2Name={player2Name}
-              />
-            )}
           </div>
         )}
       />

@@ -1,176 +1,185 @@
 .questionManager {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
 }
 
 .header {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #cbd5e1;
+  gap: 1.5rem;
 }
 
 .header h2 {
-  margin-bottom: 1rem;
+  color: #1a2533;
+  font-size: 2rem;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .controlBar {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
+  background: #f1f5f9;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #cbd5e1;
 }
 
 .filterGroup {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .filterLabel {
-  font-weight: bold;
-  color: #666;
+  color: #1a2533;
+  font-weight: 600;
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .filterSelect {
-  padding: 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  min-width: 200px;
-}
-
-.questionForm {
-  background: white;
-  padding: 2rem;
+  background: #ffffff;
+  color: #1a2533;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.formGroup label {
-  font-weight: bold;
-  color: #333;
-}
-
-.formGroup select,
-.formGroup input[type="text"],
-.formGroup textarea {
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.optionsGrid {
-  display: grid;
-  gap: 1rem;
-}
-
-.optionWithCheckbox {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-}
-
-.optionWithCheckbox textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.optionWithCheckbox label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: normal;
-  color: #666;
-}
-
-.truefalseOptions {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-}
-
-.truefalseOptions label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: normal;
+  min-width: 200px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
 }
 
-.submitButton {
+.actionRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
   width: 100%;
-  padding: 1rem;
-  background-color: #2196f3;
+}
+
+.sortGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: auto;
+  background: #f1f5f9;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+.buttonContainer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.filterSelect:hover {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.filterSelect:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.addButton {
+  background: #2563eb;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  width: fit-content;
+  font-size: 1.1rem;
+  margin: 0;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.submitButton:hover:not(:disabled) {
-  background-color: #1976d2;
+.addButton:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.submitButton:disabled {
-  background-color: #ccc;
+.addButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.addButton:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .errorMessage {
+  background: #fee2e2;
+  color: #dc2626;
   padding: 1rem;
-  margin: 1rem 0;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
-  border-radius: 4px;
-  color: #c62828;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .errorMessage button {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #ef5350;
+  background: #dc2626;
   color: white;
   border: none;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .questionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  transition: opacity 0.2s ease;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
 }
 
 .questionCard {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  position: relative;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.questionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .questionHeader {
@@ -179,59 +188,74 @@
   align-items: center;
 }
 
-.points {
-  background-color: #2196f3;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-}
-
 .techTypeBadges {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .techTypeBadge {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  transition: all 0.3s ease;
+}
+
+.techTypeBadge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.points {
+  background: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
 }
 
 .categoryName {
-  font-weight: bold;
-  color: #2196f3;
+  color: #1a2533;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .questionType {
+  color: #64748b;
   font-size: 0.9rem;
-  color: #666;
   text-transform: capitalize;
 }
 
 .questionText {
-  color: #333;
-  line-height: 1.5;
+  color: #1a2533;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
 }
 
 .optionsList {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .option {
-  padding: 0.5rem;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  background: #f1f5f9;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #1a2533;
+  transition: background-color 0.2s;
 }
 
 .option.correct {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-left: 4px solid #2e7d32;
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 500;
 }
 
 .controls {
@@ -239,50 +263,149 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+  border-top: 1px solid #cbd5e1;
 }
 
 .stats {
-  color: #666;
+  color: #64748b;
   font-size: 0.9rem;
+}
+
+.cardButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.editButton {
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.editButton:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .deleteButton {
-  padding: 0.5rem 1rem;
-  background-color: #f44336;
+  background: #dc2626;
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 .deleteButton:hover {
-  background-color: #d32f2f;
+  background: #991b1b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .noQuestions {
   grid-column: 1 / -1;
   text-align: center;
+  color: #64748b;
+  font-size: 1.1rem;
   padding: 2rem;
-  background: #f5f5f5;
-  border-radius: 8px;
-  color: #666;
+  background: #f1f5f9;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .questionManager {
     padding: 1rem;
   }
 
-  .formGrid {
-    grid-template-columns: 1fr;
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
   }
 
-  .truefalseOptions {
+  .header h2 {
+    font-size: 1.75rem;
+  }
+
+  .controlBar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .filterGroup {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
+
+  .actionRow {
     flex-direction: column;
     gap: 1rem;
   }
+
+  .sortGroup {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .buttonContainer {
+    position: static;
+    transform: none;
+    width: 100%;
+  }
+
+  .addButton {
+    width: 100%;
+    margin: 0;
+  }
+
+  .questionsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.questionCard {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.addButton:focus:not(:disabled) {
+  animation: pulse 1s;
 }

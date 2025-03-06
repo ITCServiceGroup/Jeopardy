@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import LoadingSpinner from '../LoadingSpinner';
+import Modal from '../Modal';
+import CategoryForm from './CategoryForm';
 import styles from './CategoryManager.module.css';
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
   const [techTypes, setTechTypes] = useState([]);
-  const [newCategory, setNewCategory] = useState('');
-  const [selectedTechTypes, setSelectedTechTypes] = useState([]);
+  const [modalState, setModalState] = useState({ isOpen: false, categoryToEdit: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -80,27 +81,63 @@ const CategoryManager = () => {
     }
   };
 
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCategory.trim() || selectedTechTypes.length === 0) return;
+  const handleSubmitCategory = async (formData) => {
+    // Clear any previous error
+    setError(null);
 
     try {
-      // First create the category
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('categories')
-        .insert({
-          name: newCategory.trim()
-        })
-        .select('id')
-        .single();
+      let categoryData;
+      let categoryError;
+
+      if (formData.id) {
+        // Update existing category
+        const { data, error } = await supabase
+          .from('categories')
+          .update({ name: formData.name.trim() })
+          .eq('id', formData.id)
+          .select()
+          .single();
+        categoryData = data;
+        categoryError = error;
+      } else {
+        // Check if a category with the same name and overlapping tech types exists
+        const { data: existingCategory } = await supabase
+          .from('categories')
+          .select('id, category_tech_types!inner(tech_type_id)')
+          .ilike('name', formData.name.trim())
+          .in('category_tech_types.tech_type_id', formData.techTypes);
+
+        if (existingCategory && existingCategory.length > 0) {
+          throw new Error('A category with this name already exists for the selected tech type(s).');
+        }
+
+        // Create new category
+        const { data, error } = await supabase
+          .from('categories')
+          .insert({ name: formData.name.trim() })
+          .select()
+          .single();
+        categoryData = data;
+        categoryError = error;
+      }
 
       if (categoryError) throw categoryError;
 
-      // Then create the tech type assignments
+      // Delete existing tech type assignments if updating
+      if (formData.id) {
+        const { error: deleteError } = await supabase
+          .from('category_tech_types')
+          .delete()
+          .eq('category_id', formData.id);
+          
+        if (deleteError) throw deleteError;
+      }
+
+      // Create tech type assignments
       const { error: techTypesError } = await supabase
         .from('category_tech_types')
         .insert(
-          selectedTechTypes.map(techTypeId => ({
+          formData.techTypes.map(techTypeId => ({
             category_id: categoryData.id,
             tech_type_id: techTypeId
           }))
@@ -108,11 +145,9 @@ const CategoryManager = () => {
 
       if (techTypesError) throw techTypesError;
 
-      setNewCategory('');
-      setSelectedTechTypes([]);
       await fetchData();
     } catch (err) {
-      setError('Error adding category: ' + err.message);
+      setError('Error saving category: ' + err.message);
     }
   };
 
@@ -148,22 +183,6 @@ const CategoryManager = () => {
     );
   });
 
-  const getTechTypeNames = (category) => {
-    return category.category_tech_types
-      ?.map(ctt => ctt.tech_types.name)
-      .join(' & ') || 'No type';
-  };
-
-  const handleTechTypeToggle = (techTypeId) => {
-    setSelectedTechTypes(prev => {
-      if (prev.includes(techTypeId)) {
-        return prev.filter(id => id !== techTypeId);
-      } else {
-        return [...prev, techTypeId];
-      }
-    });
-  };
-
   if (loading) return <LoadingSpinner message="Loading categories..." theme="light" />;
 
   return (
@@ -187,46 +206,30 @@ const CategoryManager = () => {
 
       {error && (
         <div className={styles.errorMessage}>
-          <p>{error}</p>
-          <button onClick={fetchData}>Retry</button>
+          {error}
         </div>
       )}
 
-      <form onSubmit={handleAddCategory} className={styles.addCategoryForm}>
-        <div className={styles.formGroup}>
-          <label>Category Name</label>
-          <input
-            type="text"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Enter category name"
-            required
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Tech Types</label>
-          <div className={styles.checkboxGroup}>
-            {techTypes.map(type => (
-              <label key={type.id} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedTechTypes.includes(type.id)}
-                  onChange={() => handleTechTypeToggle(type.id)}
-                />
-                {type.name}
-              </label>
-            ))}
-          </div>
-          {selectedTechTypes.length === 0 && (
-            <small className={styles.errorText}>
-              Select at least one tech type
-            </small>
-          )}
-        </div>
-        <button type="submit" className={styles.addButton}>
-          Add Category
-        </button>
-      </form>
+      <button
+        onClick={() => setModalState({ isOpen: true, categoryToEdit: null })}
+        className={styles.addButton}
+      >
+        Add New Category
+      </button>
+
+      <Modal 
+        isOpen={modalState.isOpen} 
+        onClose={() => setModalState({ isOpen: false, categoryToEdit: null })}
+      >
+        <CategoryForm 
+          techTypes={techTypes}
+          initialData={modalState.categoryToEdit}
+          onSubmit={async (formData) => {
+            await handleSubmitCategory(formData);
+            setModalState({ isOpen: false, categoryToEdit: null });
+          }}
+        />
+      </Modal>
 
       <div className={styles.categoriesGrid}>
         {filteredCategories.map(category => (
@@ -253,12 +256,23 @@ const CategoryManager = () => {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => handleDeleteCategory(category.id)}
-              className={styles.deleteButton}
-            >
-              Delete Category
-            </button>
+            <div className={styles.cardButtons}>
+              <button
+                onClick={() => setModalState({ 
+                  isOpen: true, 
+                  categoryToEdit: category 
+                })}
+                className={styles.editButton}
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDeleteCategory(category.id)}
+                className={styles.deleteButton}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>

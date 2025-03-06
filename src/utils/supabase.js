@@ -167,38 +167,50 @@ export const loadGameQuestions = async (techTypeId) => {
       return {};
     }
 
-    // Transform into the game format
-    const gameQuestions = {};
+    // Transform into the game format with random selection
+    const validGameQuestions = {};
     categories.forEach(category => {
-      gameQuestions[category.name] = {};
       const categoryQuestions = questionsData.filter(q => q.category_id === category.id);
-      console.log(`Questions for category ${category.name}:`, categoryQuestions);
+      const selectedQuestions = {};
+      let isValid = true;
       
-      // Make sure we have questions for each point value
       [200, 400, 600, 800, 1000].forEach(points => {
-        const question = categoryQuestions.find(q => q.points === points);
-        if (question) {
-          gameQuestions[category.name][points] = {
-            id: question.id,
-            question: question.question,
-            correctAnswer: question.answer,
-            options: question.options || []
-          };
+        const candidates = categoryQuestions.filter(q => q.points === points);
+        if (candidates.length === 0) {
+          isValid = false;
         } else {
-          // Add a placeholder question if none exists for this point value
-          gameQuestions[category.name][points] = {
-            id: `placeholder-${category.name}-${points}`,
-            question: `No ${points} point question available for ${category.name}`,
-            correctAnswer: "No answer available",
-            options: ["No answer available"],
-            isPlaceholder: true
+          const randomCandidate = candidates[Math.floor(Math.random() * candidates.length)];
+          selectedQuestions[points] = {
+            id: randomCandidate.id,
+            question: randomCandidate.question,
+            correct_answers: randomCandidate.correct_answers || [randomCandidate.answer],
+            options: randomCandidate.options || [randomCandidate.answer],
+            question_type: randomCandidate.question_type || 'multiple_choice'
           };
         }
       });
+      
+      if (isValid) {
+        validGameQuestions[category.name] = selectedQuestions;
+      }
     });
-
-    console.log("Transformed game questions:", gameQuestions);
-    return gameQuestions;
+    
+    // Randomly select 6 categories if there are more than 6
+    let finalGameQuestions = {};
+    const categoryNames = Object.keys(validGameQuestions);
+    if (categoryNames.length > 6) {
+      // Shuffle the categoryNames array
+      categoryNames.sort(() => Math.random() - 0.5);
+      const selectedCategoryNames = categoryNames.slice(0, 6);
+      selectedCategoryNames.forEach(name => {
+        finalGameQuestions[name] = validGameQuestions[name];
+      });
+    } else {
+      finalGameQuestions = validGameQuestions;
+    }
+    
+    console.log("Transformed game questions:", finalGameQuestions);
+    return finalGameQuestions;
   } catch (error) {
     console.error("Error in loadGameQuestions:", error);
     throw error;

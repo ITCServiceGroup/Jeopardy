@@ -156,18 +156,28 @@
   margin-top: 0.5rem;
 }
 
+.errorMessage {
+  color: #dc2626;
+  padding: 1rem;
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  background-color: rgba(220, 38, 38, 0.05);
+  margin-bottom: 1rem; /* Existing margin */
+  padding-bottom: 1rem;
+}
+
 .addButton {
   background: #2563eb;
   color: white;
   border: none;
-  padding: 1.5rem 3rem;
+  padding: 1rem 2rem;
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   width: fit-content;
-  font-size: 1.3rem;
-  margin: 0 auto;
+  font-size: 1.1rem;
+  margin: 0 auto 2rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -242,6 +252,30 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.cardButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.editButton {
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.editButton:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .deleteButton {
   background: #dc2626;
   color: white;
@@ -250,7 +284,6 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  align-self: flex-start;
   font-weight: 600;
   font-size: 1rem;
 }
