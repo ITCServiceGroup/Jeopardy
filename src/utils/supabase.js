@@ -1,16 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Try to get config from window object (runtime config) first, then fall back to env vars
-const supabaseUrl = window.JEOPARDY_CONFIG?.supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Detection for GitHub Pages deployment
+const isGitHubPages = window.location.hostname.includes('github.io');
+console.log('Is GitHub Pages deployment:', isGitHubPages);
+
+// Default Supabase credentials - IMPORTANT: these are already public in your .env file
+// Using them as a last resort fallback to ensure the app always works in production
+const DEFAULT_SUPABASE_URL = 'https://dwbuyhxjaqlydlhaulca.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3YnV5aHhqYXFseWRsaGF1bGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MzYxODQsImV4cCI6MjA1NjAxMjE4NH0.l64i74owmFelvdbn0Gqk0k6pYtQ9NqQIQGsWaDu1eCE';
+
+// Get runtime configuration with multiple fallbacks
+// 1. Try window.JEOPARDY_CONFIG from config.js
+// 2. Try environment variables from Vite
+// 3. Use hardcoded defaults as last resort
+const supabaseUrl = window.JEOPARDY_CONFIG?.supabaseUrl || 
+                   import.meta.env.VITE_SUPABASE_URL || 
+                   DEFAULT_SUPABASE_URL;
+
+const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey || 
+                        import.meta.env.VITE_SUPABASE_ANON_KEY || 
+                        DEFAULT_SUPABASE_ANON_KEY;
 
 // Log configuration source for debugging
-if (window.JEOPARDY_CONFIG) {
-  console.log('Using runtime configuration for Supabase');
-} else {
-  console.log('Using environment variables for Supabase');
-}
+console.log('Supabase configuration source:', 
+  window.JEOPARDY_CONFIG ? 'Runtime config' : 
+  (import.meta.env.VITE_SUPABASE_URL ? 'Environment variables' : 'Default fallback'));
 
+console.log('Supabase URL being used:', supabaseUrl ? '[URL available]' : '[URL missing]');
+console.log('Supabase Key being used:', supabaseAnonKey ? '[KEY available]' : '[KEY missing]');
+
+// Initialize Supabase client with the resolved credentials
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Category Management

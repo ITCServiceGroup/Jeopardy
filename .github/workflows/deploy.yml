@@ -44,6 +44,7 @@ jobs:
           # Replace placeholders with actual values
           sed -i "s|SUPABASE_URL_PLACEHOLDER|${{ secrets.VITE_SUPABASE_URL }}|g" public/config.js
           sed -i "s|SUPABASE_ANON_KEY_PLACEHOLDER|${{ secrets.VITE_SUPABASE_ANON_KEY }}|g" public/config.js
+          cat public/config.js
           echo "Runtime config generated"
           
       - name: Build project
@@ -51,6 +52,16 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          
+      - name: Ensure config.js exists in build
+        run: |
+          # Double-check that config.js exists in the build output
+          ls -la dist/
+          # If config.js is not in the dist directory, copy it there manually
+          if [ ! -f dist/config.js ]; then
+            echo "config.js not found in dist, copying manually"
+            cp public/config.js dist/
+          fi
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
