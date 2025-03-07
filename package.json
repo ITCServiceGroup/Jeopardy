@@ -13,7 +13,7 @@
     "build": "vite build # Build for production",
     "preview": "vite preview # Preview production build",
     "# Deployment": "",
-    "deploy": "gh-pages -d dist # Deploy to GitHub Pages",
+    "deploy": "npx gh-pages -d dist # Deploy to GitHub Pages",
     "deploy:prod": "NODE_ENV=production npm run build && npm run deploy # Production deployment",
     "# Testing": "",
     "test": "vitest # Run tests in watch mode",

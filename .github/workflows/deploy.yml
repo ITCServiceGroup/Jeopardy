@@ -26,4 +26,4 @@ jobs:
         run: npm run build
 
       - name: Deploy to GitHub Pages
-        run: npm run deploy  # Use the project's deploy script
+        run: npm run deploy
