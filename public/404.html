@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ITC Jeopardy</title>
+  <script>
+    // This script provides a fallback for GitHub Pages to redirect
+    // all navigation requests to the index.html file with a hash route.
+    // This is necessary because GitHub Pages doesn't support client-side routing.
+    var pathSegmentsToKeep = 1; // Keeps the first path segment (repository name)
+    
+    var l = window.location;
+    
+    // Extract the path (removing the first segment which is the repo name)
+    var repoName = l.pathname.split('/')[1];
+    var path = l.pathname.split('/').slice(2).join('/');
+    
+    // Create the redirect URL with hash routing
+    var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + 
+                     '/' + repoName + '/#/' + path + l.search;
+    
+    // Redirect to the hash-based URL
+    window.location.href = redirectUrl;
+  </script>
+</head>
+<body>
+  <h1>Redirecting...</h1>
+  <p>
+    If you are not redirected automatically, 
+    <a href="/">click here to go to the homepage</a>.
+  </p>
+</body>
+</html>

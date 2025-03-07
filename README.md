@@ -193,12 +193,22 @@ npm run deploy
 
 ### Troubleshooting Deployment Issues
 
+#### Supabase Connectivity Issues
+
 If you encounter issues with Supabase connectivity in your deployed app:
 
 1. Verify that the GitHub secrets are correctly set
 2. Check the browser console for any errors
 3. Ensure your Supabase project allows requests from your GitHub Pages domain
 4. If needed, rebuild and redeploy the app
+
+#### Routing Issues on GitHub Pages
+
+The app uses hash-based routing (`HashRouter`) for GitHub Pages compatibility:
+
+- All routes will appear after a hash in the URL (e.g., `https://yourusername.github.io/Jeopardy/#/admin`)
+- A 404.html file is included to handle direct navigation to routes
+- If you make changes to routing, ensure they're compatible with hash-based URLs
 
 ## Contributing
 
