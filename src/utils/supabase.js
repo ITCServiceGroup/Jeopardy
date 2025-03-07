@@ -1,7 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Try to get config from window object (runtime config) first, then fall back to env vars
+const supabaseUrl = window.JEOPARDY_CONFIG?.supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Log configuration source for debugging
+if (window.JEOPARDY_CONFIG) {
+  console.log('Using runtime configuration for Supabase');
+} else {
+  console.log('Using environment variables for Supabase');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

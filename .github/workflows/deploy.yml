@@ -37,6 +37,15 @@ jobs:
         run: |
           echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> $GITHUB_ENV
           echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+      - name: Generate runtime config
+        run: |
+          # Create config.js from template
+          cp public/config.template.js public/config.js
+          # Replace placeholders with actual values
+          sed -i "s|SUPABASE_URL_PLACEHOLDER|${{ secrets.VITE_SUPABASE_URL }}|g" public/config.js
+          sed -i "s|SUPABASE_ANON_KEY_PLACEHOLDER|${{ secrets.VITE_SUPABASE_ANON_KEY }}|g" public/config.js
+          echo "Runtime config generated"
+          
       - name: Build project
         run: npm run build
         env:

@@ -167,10 +167,38 @@ npm test
 npm run build
 ```
 
-### Deploying
+### Deploying to GitHub Pages
+
+#### Using GitHub Actions (Recommended)
+The project is configured to automatically deploy to GitHub Pages using GitHub Actions. When you push to the main branch, the workflow will build and deploy the app.
+
+1. Set up GitHub Pages in your repository settings:
+   - Go to Settings > Pages
+   - Set the source to "GitHub Actions"
+
+2. Add the required secrets to your repository:
+   - Go to Settings > Secrets and variables > Actions
+   - Add the following secrets:
+     - `VITE_SUPABASE_URL`: Your Supabase project URL
+     - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+3. Push to the main branch or manually trigger the workflow:
+   - Go to Actions > Deploy to GitHub Pages > Run workflow
+
+#### Manual Deployment
+You can also deploy manually using the npm script:
 ```bash
 npm run deploy
 ```
+
+### Troubleshooting Deployment Issues
+
+If you encounter issues with Supabase connectivity in your deployed app:
+
+1. Verify that the GitHub secrets are correctly set
+2. Check the browser console for any errors
+3. Ensure your Supabase project allows requests from your GitHub Pages domain
+4. If needed, rebuild and redeploy the app
 
 ## Contributing
 
