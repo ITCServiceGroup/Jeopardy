@@ -39,6 +39,10 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+      - name: Set environment variables
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
 
   # Deployment job
   deploy:
