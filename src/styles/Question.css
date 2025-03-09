@@ -136,10 +136,39 @@
   box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
 }
 
-.option[data-selected="true"]:not([data-confirmed="true"]) {
-  border-color: #ffcc00;
-  background: linear-gradient(135deg, #000099 0%, #0000cc 100%);
-  box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+/* SUPER OBVIOUS SELECTION STYLES */
+.option[data-selected="true"]:not([data-confirmed="true"]),
+.option.selected:not([data-confirmed="true"]) {
+  border-color: #ffcc00 !important;
+  border-width: 3px !important;
+  background: linear-gradient(135deg, #000099 0%, #0000cc 100%) !important;
+  box-shadow: 0 0 30px rgba(255, 204, 0, 0.8) !important;
+  transform: translateY(-3px) !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Add a checkmark before selected options */
+.option.selected:not([data-confirmed="true"])::before {
+  content: "✓ ";
+  color: #ffcc00;
+  font-weight: bold;
+  font-size: 24px;
+  margin-right: 10px;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 .option[data-confirmed="true"][data-correct="true"] {
@@ -270,6 +299,124 @@
   40%, 80% {
     transform: translateX(5px);
   }
+}
+
+/* Question type specific styles */
+
+/* True/False options */
+.true-false-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.true-option, .false-option {
+  padding: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.true-option {
+  background: linear-gradient(135deg, #006633 0%, #009966 100%);
+}
+
+.false-option {
+  background: linear-gradient(135deg, #990000 0%, #cc3333 100%);
+}
+
+/* Check all that apply */
+.check-all-instructions {
+  margin-bottom: 1rem;
+  font-weight: bold;
+  color: #ffcc00;
+  font-size: 1.1rem;
+}
+
+.check-option {
+  display: flex !important;
+  align-items: center !important;
+  text-align: left !important;
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+  position: relative !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Super prominent selected state */
+.check-option.selected {
+  border: 5px solid #ffcc00 !important;
+  background: linear-gradient(135deg, #000099 0%, #0000cc 100%) !important;
+  box-shadow: 0 0 30px rgba(255, 204, 0, 0.8) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Make the checkmark very obvious */
+.checkmark-indicator {
+  color: #ffcc00 !important;
+  font-weight: bold !important;
+  font-size: 24px !important;
+  margin-right: 15px !important;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.8) !important;
+  animation: fadeIn 0.2s ease-in !important;
+}
+
+/* Additional animation for selected state */
+@keyframes selectedPulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 204, 0, 1);
+  }
+}
+
+/* Apply the animation to selected options */
+.check-option.selected {
+  animation: selectedPulse 2s infinite !important;
+}
+
+.option-text {
+  flex-grow: 1;
+}
+
+/* Multiple choice options */
+.multiple-choice-options {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Check all options */
+.check-all-options {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* No options message */
+.no-options {
+  text-align: center;
+  padding: 1rem;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 51, 0.5);
+  border-radius: 8px;
+}
+
+.single-option {
+  margin-top: 1rem;
+  background: linear-gradient(135deg, #000099 0%, #0000cc 100%);
+}
+
+/* Correct answers list */
+.correct-answers-list {
+  margin-top: 0.5rem;
+  margin-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.correct-answers-list li {
+  margin-bottom: 0.25rem;
 }
 
 /* Responsive design */
