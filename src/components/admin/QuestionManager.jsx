@@ -104,14 +104,34 @@ const QuestionManager = () => {
       }
 
       if (selectedTechType !== 'all') {
-        const { data: categoryIds } = await supabase
-          .from('category_tech_types')
-          .select('category_id')
-          .eq('tech_type_id', parseInt(selectedTechType));
+        try {
+          // Get all categories that have the selected tech type
+          const { data: categoriesWithType, error: catError } = await supabase
+            .from('categories')
+            .select(`
+              id,
+              category_tech_types!inner (
+                tech_type_id,
+                tech_types (
+                  id,
+                  name
+                )
+              )
+            `)
+            .eq('category_tech_types.tech_type_id', parseInt(selectedTechType));
 
-        if (categoryIds && categoryIds.length > 0) {
-          const ids = categoryIds.map(item => item.category_id);
-          baseQuery.in('category_id', ids);
+          if (catError) throw catError;
+
+          if (categoriesWithType && categoriesWithType.length > 0) {
+            const categoryIds = categoriesWithType.map(cat => cat.id);
+            baseQuery.in('category_id', categoryIds);
+          } else {
+            // If no categories found, ensure no results are returned
+            baseQuery.eq('category_id', -1);
+          }
+        } catch (err) {
+          console.error('Error filtering by tech type:', err);
+          throw new Error('Error filtering questions by tech type');
         }
       }
 
