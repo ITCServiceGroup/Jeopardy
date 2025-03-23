@@ -46,7 +46,7 @@ const AdminDashboard = () => {
             </button>
           </div>
           <a
-            href="/"
+            href={import.meta.env.MODE === 'production' ? '/Jeopardy/' : '/'}
             className={styles.backButton}
             onClick={(e) => {
               if (!confirm('Are you sure you want to leave the admin dashboard?')) {
