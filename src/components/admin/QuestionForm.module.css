@@ -75,32 +75,6 @@
   cursor: pointer;
 }
 
-.optionsHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.optionsHeader label {
-  margin: 0;
-}
-
-.addOptionButton {
-  background-color: #10b981;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.addOptionButton:hover {
-  background-color: #059669;
-}
-
 .optionsGrid {
   display: grid;
   gap: 1rem;
@@ -117,50 +91,22 @@
   border: 1px solid #e2e8f0;
 }
 
-.optionControls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.removeOptionButton {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.removeOptionButton:hover {
-  background-color: #dc2626;
-}
-
 .optionWithCheckbox textarea {
   resize: vertical;
   min-height: 2.5rem;
 }
 
-.optionControls label {
+.optionWithCheckbox label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   white-space: nowrap;
-  margin: 0;
+  margin: 0.5rem 0 0;
   cursor: pointer;
 }
 
-.optionControls input[type="radio"],
-.optionControls input[type="checkbox"] {
+.optionWithCheckbox input[type="radio"],
+.optionWithCheckbox input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -192,24 +138,11 @@
   .formGrid {
     grid-template-columns: 1fr;
   }
-
-  .optionsHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-
+  
   .optionWithCheckbox {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
   }
-
-  .optionControls {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
+  
   .truefalseOptions {
     flex-direction: column;
     gap: 1rem;

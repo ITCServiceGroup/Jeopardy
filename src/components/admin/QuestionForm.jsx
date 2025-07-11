@@ -36,31 +36,25 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
 
   const handleQuestionTypeChange = (e) => {
     const type = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      question_type: type,
-      options: type === 'true_false' ? ['True', 'False'] : ['', '', '', ''],
-      correct_answers: []
-    }));
-  };
-
-  const addOption = () => {
-    setFormData(prev => ({
-      ...prev,
-      options: [...prev.options, '']
-    }));
-  };
-
-  const removeOption = (index) => {
     setFormData(prev => {
-      const newOptions = prev.options.filter((_, i) => i !== index);
-      const removedOption = prev.options[index];
-      const newCorrectAnswers = prev.correct_answers.filter(answer => answer !== removedOption);
+      let newOptions;
+
+      if (type === 'true_false') {
+        // True/False always uses fixed options
+        newOptions = ['True', 'False'];
+      } else if (prev.question_type === 'true_false') {
+        // Switching from True/False to multiple choice or check all - start with default options
+        newOptions = ['', '', '', ''];
+      } else {
+        // Switching between multiple choice and check all - preserve existing options
+        newOptions = [...prev.options];
+      }
 
       return {
         ...prev,
+        question_type: type,
         options: newOptions,
-        correct_answers: newCorrectAnswers
+        correct_answers: [] // Always reset correct answers when changing type
       };
     });
   };
@@ -104,8 +98,8 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
             .map(opt => opt.trim())
             .filter(opt => opt !== '');
 
-          if (options.length < 2) {
-            throw new Error('Please provide at least 2 options');
+          if (options.length !== 4) {
+            throw new Error('Please provide exactly 4 options');
           }
 
           correct_answers = formData.correct_answers;
@@ -119,8 +113,8 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
             .map(opt => opt.trim())
             .filter(opt => opt !== '');
 
-          if (options.length < 2) {
-            throw new Error('Please provide at least 2 options');
+          if (options.length !== 4) {
+            throw new Error('Please provide exactly 4 options');
           }
 
           correct_answers = formData.correct_answers;
@@ -250,21 +244,11 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
           </div>
         ) : (
           <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-            <div className={styles.optionsHeader}>
-              <label>
-                {formData.question_type === 'check_all'
-                  ? 'Options (select all correct answers):'
-                  : 'Options (select one correct answer):'}
-              </label>
-              <button
-                type="button"
-                onClick={addOption}
-                className={styles.addOptionButton}
-                title="Add option"
-              >
-                + Add Option
-              </button>
-            </div>
+            <label>
+              {formData.question_type === 'check_all' 
+                ? 'Options (select all correct answers):' 
+                : 'Options (select one correct answer):'}
+            </label>
             <div className={styles.optionsGrid}>
               {formData.options.map((option, index) => (
                 <div key={index} className={styles.optionWithCheckbox}>
@@ -275,28 +259,16 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
                     required
                     rows={2}
                   />
-                  <div className={styles.optionControls}>
-                    <label>
-                      <input
-                        type={formData.question_type === 'check_all' ? 'checkbox' : 'radio'}
-                        name="correct_answers"
-                        checked={formData.correct_answers.includes(option)}
-                        onChange={() => handleOptionCheck(option)}
-                        disabled={!option.trim()}
-                      />
-                      Correct
-                    </label>
-                    {formData.options.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => removeOption(index)}
-                        className={styles.removeOptionButton}
-                        title="Remove option"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
+                  <label>
+                    <input
+                      type={formData.question_type === 'check_all' ? 'checkbox' : 'radio'}
+                      name="correct_answers"
+                      checked={formData.correct_answers.includes(option)}
+                      onChange={() => handleOptionCheck(option)}
+                      disabled={!option.trim()}
+                    />
+                    Correct
+                  </label>
                 </div>
               ))}
             </div>
