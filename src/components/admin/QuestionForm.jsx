@@ -59,6 +59,27 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
     });
   };
 
+  const addOption = () => {
+    setFormData(prev => ({
+      ...prev,
+      options: [...prev.options, '']
+    }));
+  };
+
+  const removeOption = (index) => {
+    setFormData(prev => {
+      const newOptions = prev.options.filter((_, i) => i !== index);
+      const removedOption = prev.options[index];
+      const newCorrectAnswers = prev.correct_answers.filter(answer => answer !== removedOption);
+
+      return {
+        ...prev,
+        options: newOptions,
+        correct_answers: newCorrectAnswers
+      };
+    });
+  };
+
   const handleOptionCheck = (option) => {
     setFormData(prev => ({
       ...prev,
@@ -244,11 +265,21 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
           </div>
         ) : (
           <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-            <label>
-              {formData.question_type === 'check_all' 
-                ? 'Options (select all correct answers):' 
-                : 'Options (select one correct answer):'}
-            </label>
+            <div className={styles.optionsHeader}>
+              <label>
+                {formData.question_type === 'check_all'
+                  ? 'Options (select all correct answers):'
+                  : 'Options (select one correct answer):'}
+              </label>
+              <button
+                type="button"
+                onClick={addOption}
+                className={styles.addOptionButton}
+                title="Add option"
+              >
+                + Add Option
+              </button>
+            </div>
             <div className={styles.optionsGrid}>
               {formData.options.map((option, index) => (
                 <div key={index} className={styles.optionWithCheckbox}>
@@ -259,16 +290,28 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
                     required
                     rows={2}
                   />
-                  <label>
-                    <input
-                      type={formData.question_type === 'check_all' ? 'checkbox' : 'radio'}
-                      name="correct_answers"
-                      checked={formData.correct_answers.includes(option)}
-                      onChange={() => handleOptionCheck(option)}
-                      disabled={!option.trim()}
-                    />
-                    Correct
-                  </label>
+                  <div className={styles.optionControls}>
+                    <label>
+                      <input
+                        type={formData.question_type === 'check_all' ? 'checkbox' : 'radio'}
+                        name="correct_answers"
+                        checked={formData.correct_answers.includes(option)}
+                        onChange={() => handleOptionCheck(option)}
+                        disabled={!option.trim()}
+                      />
+                      Correct
+                    </label>
+                    {formData.options.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => removeOption(index)}
+                        className={styles.removeOptionButton}
+                        title="Remove option"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
