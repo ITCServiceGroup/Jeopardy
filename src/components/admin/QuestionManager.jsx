@@ -340,6 +340,7 @@ const QuestionManager = () => {
         <QuestionForm
           categories={categories}
           initialData={modalState.questionToEdit}
+          defaultCategoryId={selectedCategory}
           onSubmit={async (formData) => {
             await handleSubmitQuestion(formData);
             setModalState({ isOpen: false, questionToEdit: null });

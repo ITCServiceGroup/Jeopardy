@@ -8,9 +8,9 @@ const QUESTION_TYPES = [
   { value: 'true_false', label: 'True/False' }
 ];
 
-const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
+const QuestionForm = ({ categories, onSubmit, initialData = null, defaultCategoryId = '' }) => {
   const [formData, setFormData] = useState({
-    category_id: '',
+    category_id: initialData ? '' : defaultCategoryId,
     question: '',
     question_type: 'multiple_choice',
     correct_answers: [],
@@ -26,13 +26,19 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
         question: initialData.question,
         question_type: initialData.question_type,
         correct_answers: initialData.correct_answers,
-        options: initialData.question_type === 'true_false' 
+        options: initialData.question_type === 'true_false'
           ? ['True', 'False']
           : [...initialData.options],
         points: initialData.points
       });
+    } else if (defaultCategoryId) {
+      // Set default category for new questions when a category filter is active
+      setFormData(prev => ({
+        ...prev,
+        category_id: defaultCategoryId
+      }));
     }
-  }, [initialData]);
+  }, [initialData, defaultCategoryId]);
 
   const handleQuestionTypeChange = (e) => {
     const type = e.target.value;
@@ -158,7 +164,7 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
       if (!initialData) {
         // Only reset form if this was a new question creation
         setFormData({
-          category_id: '',
+          category_id: defaultCategoryId || '',
           question: '',
           question_type: 'multiple_choice',
           correct_answers: [],
