@@ -119,8 +119,8 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
             .map(opt => opt.trim())
             .filter(opt => opt !== '');
 
-          if (options.length !== 4) {
-            throw new Error('Please provide exactly 4 options');
+          if (options.length < 2) {
+            throw new Error('Please provide at least 2 options');
           }
 
           correct_answers = formData.correct_answers;
@@ -134,8 +134,8 @@ const QuestionForm = ({ categories, onSubmit, initialData = null }) => {
             .map(opt => opt.trim())
             .filter(opt => opt !== '');
 
-          if (options.length !== 4) {
-            throw new Error('Please provide exactly 4 options');
+          if (options.length < 2) {
+            throw new Error('Please provide at least 2 options');
           }
 
           correct_answers = formData.correct_answers;
