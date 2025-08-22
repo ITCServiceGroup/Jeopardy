@@ -10,10 +10,14 @@ console.log('Is GitHub Pages environment:', isGitHubPages);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <HashRouter future={{
-      v7_startTransition: true,
-      v7_relativeSplatPath: true
-    }}>
+    <HashRouter
+      future={{
+        // Enable React 18 concurrent features for React Router v7 compatibility
+        v7_startTransition: true,
+        // Enable new relative route resolution within splat routes for v7 compatibility
+        v7_relativeSplatPath: true
+      }}
+    >
       <App />
     </HashRouter>
   </React.StrictMode>
