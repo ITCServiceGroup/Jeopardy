@@ -510,19 +510,34 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
   if (maxSeedErr) throw maxSeedErr;
   const nextSeed = ((maxSeedRows && maxSeedRows.length > 0 ? (maxSeedRows[0].seed_number || 0) : 0) + 1);
 
-  // Register participant
-  const { data, error } = await supabase
-    .from('tournament_participants')
-    .insert([{
-      tournament_id: tournamentId,
-      participant_name: participantName,
-      status: 'registered',
-      seed_number: nextSeed
-    }])
-    .select();
+  // Register participant (graceful under race: unique constraint)
+  let insertRes;
+  try {
+    insertRes = await supabase
+      .from('tournament_participants')
+      .insert([{
+        tournament_id: tournamentId,
+        participant_name: participantName,
+        status: 'registered',
+        seed_number: nextSeed
+      }])
+      .select();
+  } catch (e) {
+    // Fallback on unique violation: return existing participant
+    if (e?.code === '23505') {
+      const { data: existing } = await supabase
+        .from('tournament_participants')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('participant_name', participantName)
+        .limit(1);
+      return existing?.[0] || null;
+    }
+    throw e;
+  }
 
-  if (error) throw error;
-  return data[0];
+  if (insertRes.error) throw insertRes.error;
+  return insertRes.data[0];
 };
 
 // Bulk register participants for a tournament
@@ -683,6 +698,7 @@ export const createTournamentGameSession = async (tournamentId, bracketId, playe
   if (gameError) throw gameError;
 
   // Update bracket with game session
+  // Try to claim this bracket only if not already started elsewhere
   const { data: bracket, error: bracketError } = await supabase
     .from('tournament_brackets')
     .update({
@@ -691,7 +707,15 @@ export const createTournamentGameSession = async (tournamentId, bracketId, playe
       started_at: new Date().toISOString()
     })
     .eq('id', bracketId)
+    .eq('match_status', 'pending')
+    .is('game_session_id', null)
     .select();
+
+  // If unable to claim (someone else started it), clean up the created session and abort
+  if (!bracketError && (!bracket || bracket.length === 0)) {
+    await supabase.from('game_sessions').delete().eq('id', gameSession[0].id);
+    throw new Error('Match already started on another device');
+  }
 
   if (bracketError) throw bracketError;
 
@@ -700,17 +724,27 @@ export const createTournamentGameSession = async (tournamentId, bracketId, playe
 
 export const completeTournamentMatch = async (bracketId, gameSessionId, winnerId) => {
   try {
-    // Update game session as completed
+    // Idempotent complete of game session (only if not already ended)
     const { error: gameError } = await supabase
       .from('game_sessions')
       .update({ end_time: new Date().toISOString() })
-      .eq('id', gameSessionId);
-
+      .eq('id', gameSessionId)
+      .is('end_time', null);
     if (gameError) throw gameError;
 
-    // Advance winner in tournament
-    const result = await advanceTournamentWinner(bracketId, winnerId);
+    // Quick guard: don't advance if the bracket is already finalized
+    const { data: bracketRow, error: bracketFetchErr } = await supabase
+      .from('tournament_brackets')
+      .select('match_status, winner_id')
+      .eq('id', bracketId)
+      .single();
+    if (bracketFetchErr) throw bracketFetchErr;
+    if (bracketRow?.winner_id || bracketRow?.match_status === 'completed') {
+      throw new Error('Match already completed');
+    }
 
+    // Advance winner in tournament (DB function does the propagation)
+    const result = await advanceTournamentWinner(bracketId, winnerId);
     return result;
   } catch (error) {
     console.error('Error completing tournament match:', error);
