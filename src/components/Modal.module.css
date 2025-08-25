@@ -24,8 +24,9 @@
 
 /* Admin Modal Styles */
 .adminModal {
-  background: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow-lg);
+  border: 1px solid var(--admin-border);
 }
 
 /* Game Modal Styles */
@@ -55,12 +56,12 @@
 
 /* Admin Close Button */
 .adminCloseButton {
-  color: #4b5563;
+  color: var(--admin-muted);
 }
 
 .adminCloseButton:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-  color: #1f2937;
+  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--admin-text);
 }
 
 /* Game Close Button */

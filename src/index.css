@@ -11,7 +11,19 @@
   --display-font: 'Orbitron', sans-serif;
   --bg-color: #ffffff;
   --accent-color: #2ecc71;
-  
+
+  /* Admin theme */
+  --admin-surface: rgba(255, 255, 255, 0.95);
+  --admin-text: #1a2533;
+  --admin-muted: #334155;
+  --admin-border: #cbd5e1;
+  --admin-accent: #2563eb;
+  --admin-accent-contrast: #ffffff;
+  --admin-accent-focus: rgba(37, 99, 235, 0.15);
+  --admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --admin-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --admin-shadow-lg: 0 4px 15px rgba(0, 0, 0, 0.15);
+
   font-family: var(--primary-font);
   font-synthesis: none;
   text-rendering: optimizeLegibility;

@@ -4,15 +4,17 @@
 
 .questionForm h2 {
   margin-bottom: 1.5rem;
-  color: #2c3e50;
+  color: var(--admin-text);
+  font-weight: 700;
 }
 
 .errorMessage {
   background-color: #fee2e2;
   color: #dc2626;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 1rem;
+  border: 1px solid #fecaca;
 }
 
 .formGrid {
@@ -29,18 +31,19 @@
 .formGroup label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 600;
+  color: var(--admin-muted);
 }
 
 .formGroup select,
 .formGroup input[type="text"],
 .formGroup textarea {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
   font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
 .formGroup textarea {
@@ -52,8 +55,9 @@
 .formGroup input[type="text"]:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
+  background: #ffffff;
 }
 
 .truefalseOptions {
@@ -88,17 +92,20 @@
 
 .addOptionButton {
   background-color: #10b981;
-  color: white;
+  color: #ffffff;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-weight: 700;
 }
 
 .addOptionButton:hover {
   background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .optionsGrid {
@@ -114,7 +121,8 @@
   padding: 1rem;
   background: #f8fafc;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .optionControls {
@@ -126,15 +134,15 @@
 
 .removeOptionButton {
   background-color: #ef4444;
-  color: white;
+  color: #ffffff;
   border: none;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 800;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -143,6 +151,8 @@
 
 .removeOptionButton:hover {
   background-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .optionWithCheckbox textarea {
@@ -167,25 +177,30 @@
 }
 
 .submitButton {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--admin-accent);
+  color: var(--admin-accent-contrast);
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   display: block;
   margin: 2rem auto 0;
+  font-weight: 700;
 }
 
 .submitButton:hover {
-  background-color: #2563eb;
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .submitButton:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {

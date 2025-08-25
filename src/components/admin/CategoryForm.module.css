@@ -4,15 +4,17 @@
 
 .categoryForm h2 {
   margin-bottom: 1.5rem;
-  color: #2c3e50;
+  color: var(--admin-text);
+  font-weight: 700;
 }
 
 .errorMessage {
   background-color: #fee2e2;
   color: #dc2626;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 1rem;
+  border: 1px solid #fecaca;
 }
 
 .formGroup {
@@ -22,29 +24,31 @@
 .formGroup label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 600;
+  color: var(--admin-muted);
 }
 
 .groupLabel {
   display: block;
   margin-bottom: 0.75rem;
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 700;
+  color: var(--admin-muted);
 }
 
 .formGroup input[type="text"] {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
   font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
 .formGroup input[type="text"]:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
+  background: #ffffff;
 }
 
 .checkboxGroup {
@@ -78,7 +82,7 @@
 }
 
 .checkboxLabel:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #f1f5f9;
 }
 
 .checkboxWrapper {
@@ -97,7 +101,7 @@
 
 .checkboxText {
   font-size: 0.95rem;
-  color: #4b5563;
+  color: var(--admin-muted);
   text-align: center;
 }
 
@@ -110,23 +114,28 @@
 }
 
 .submitButton {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--admin-accent);
+  color: var(--admin-accent-contrast);
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   display: block;
   margin: 0 auto;
 }
 
 .submitButton:hover {
-  background-color: #2563eb;
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .submitButton:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

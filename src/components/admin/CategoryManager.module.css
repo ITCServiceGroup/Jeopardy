@@ -1,9 +1,9 @@
 .categoryManager {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--admin-surface);
   border-radius: 12px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--admin-shadow-lg);
   position: relative;
   overflow: hidden;
 }
@@ -14,11 +14,11 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid var(--admin-border);
 }
 
 .header h2 {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 2rem;
   margin: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
@@ -33,38 +33,38 @@
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #cbd5e1;
+  box-shadow: var(--admin-shadow-sm);
+  border: 1px solid var(--admin-border);
 }
 
 .filterLabel {
-  color: #1a2533;
+  color: var(--admin-text);
   font-weight: 600;
   font-size: 1.1rem;
 }
 
 .filterSelect {
   background: #ffffff;
-  color: #1a2533;
-  border: 1px solid #cbd5e1;
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
   border-radius: 8px;
   padding: 0.75rem;
   min-width: 200px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 1.1rem;
 }
 
 .filterSelect:hover {
-  border-color: #2563eb;
+  border-color: var(--admin-accent);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .filterSelect:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
 }
 
 .addCategoryForm {
@@ -75,8 +75,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  border: 1px solid #cbd5e1;
+  box-shadow: var(--admin-shadow-lg);
+  border: 1px solid var(--admin-border);
 }
 
 .formGroup {
@@ -86,7 +86,7 @@
 }
 
 .formGroup label {
-  color: #1a2533;
+  color: var(--admin-text);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -94,12 +94,12 @@
 .formGroup input,
 .formGroup select {
   background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #1a2533;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
   padding: 0.75rem;
   border-radius: 8px;
   font-size: 1.1rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .formGroup input:hover,
@@ -110,9 +110,9 @@
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--admin-accent);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
 }
 
 .checkboxGroup {
@@ -126,13 +126,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #1a2533;
+  color: var(--admin-text);
   cursor: pointer;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   background: #f1f5f9;
-  transition: all 0.3s ease;
-  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+  border: 1px solid var(--admin-border);
   font-size: 1.1rem;
 }
 
@@ -147,7 +147,7 @@
   height: 1.2rem;
   margin: 0;
   cursor: pointer;
-  accent-color: #2563eb;
+  accent-color: var(--admin-accent);
 }
 
 .errorText {
@@ -167,30 +167,30 @@
 }
 
 .addButton {
-  background: #2563eb;
-  color: white;
+  background: var(--admin-accent);
+  color: var(--admin-accent-contrast);
   border: none;
   padding: 1rem 2rem;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   width: fit-content;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   margin: 0 auto 2rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
 }
 
 .addButton:hover:not(:disabled) {
   background: #1d4ed8;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .addButton:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
 }
 
 .addButton:disabled {
@@ -209,23 +209,23 @@
   border-radius: 12px;
   padding: 2rem;
   position: relative;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .categoryCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .categoryName {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
@@ -237,14 +237,14 @@
 }
 
 .techTypeBadge {
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--admin-accent);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 600;
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  transition: all 0.3s ease;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  transition: all 0.2s ease;
 }
 
 .techTypeBadge:hover {
@@ -260,38 +260,38 @@
 
 .editButton {
   background: #059669;
-  color: white;
+  color: #ffffff;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-weight: 700;
   font-size: 1rem;
 }
 
 .editButton:hover {
   background: #047857;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .deleteButton {
   background: #dc2626;
-  color: white;
+  color: #ffffff;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-weight: 700;
   font-size: 1rem;
 }
 
 .deleteButton:hover {
   background: #991b1b;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .statsBar {
@@ -299,7 +299,7 @@
   gap: 1.5rem;
   margin-top: auto;
   padding-top: 1.5rem;
-  border-top: 1px solid #cbd5e1;
+  border-top: 1px solid var(--admin-border);
 }
 
 .statItem {
@@ -310,14 +310,14 @@
 }
 
 .statLabel {
-  color: #334155;
+  color: var(--admin-muted);
   font-size: 0.9rem;
   font-weight: 500;
 }
 
 .statValue {
-  color: #1a2533;
-  font-weight: 600;
+  color: var(--admin-text);
+  font-weight: 700;
   font-size: 1.2rem;
 }
 

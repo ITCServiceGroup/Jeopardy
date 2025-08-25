@@ -1,9 +1,9 @@
 .gameStats {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--admin-surface);
   border-radius: 12px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--admin-shadow-lg);
   position: relative;
   overflow: hidden;
 }
@@ -14,11 +14,11 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid var(--admin-border);
 }
 
 .header h2 {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 2rem;
   margin: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
@@ -31,35 +31,35 @@
 }
 
 .timeRangeLabel {
-  color: #1a2533;
+  color: var(--admin-text);
   font-weight: 600;
   font-size: 1.1rem;
 }
 
 .timeRangeSelect {
   background: #f1f5f9;
-  color: #1a2533;
-  border: 1px solid #cbd5e1;
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
   border-radius: 8px;
   padding: 0.75rem;
   min-width: 200px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 1.1rem;
 }
 
 .timeRangeSelect:hover {
-  border-color: #2563eb;
+  border-color: var(--admin-accent);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--admin-shadow-sm);
   background: #ffffff;
 }
 
 .timeRangeSelect:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--admin-accent);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px var(--admin-accent-focus);
 }
 
 .statsGrid {
@@ -74,38 +74,38 @@
   border-radius: 12px;
   padding: 2rem;
   position: relative;
-  transition: all 0.3s ease;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .statsCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .techTypeTitle {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 1.4rem;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .techTypeIcon {
   width: 32px;
   height: 32px;
-  background: #2563eb;
+  background: var(--admin-accent);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  color: var(--admin-accent-contrast);
+  font-weight: 700;
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .statsContent {
@@ -124,18 +124,18 @@
   border-radius: 12px;
   text-align: center;
   min-height: 120px;
-  border: 1px solid #cbd5e1;
-  transition: all 0.3s ease;
+  border: 1px solid var(--admin-border);
+  transition: all 0.2s ease;
 }
 
 .statItem:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--admin-shadow-sm);
   background: #ffffff;
 }
 
 .statLabel {
-  color: #334155;
+  color: var(--admin-muted);
   font-size: 1rem;
   line-height: 1.2;
   font-weight: 600;
@@ -144,9 +144,9 @@
 }
 
 .statValue {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 2.5rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
@@ -162,15 +162,15 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  border: 1px solid #cbd5e1;
+  box-shadow: var(--admin-shadow-lg);
+  border: 1px solid var(--admin-border);
 }
 
 .compareTitle {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 1.4rem;
   margin-bottom: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
@@ -187,8 +187,8 @@
   padding: 2rem;
   height: 300px;
   position: relative;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .chartLabel {
@@ -196,7 +196,7 @@
   left: 50%;
   bottom: 1rem;
   transform: translateX(-50%);
-  color: #334155;
+  color: var(--admin-muted);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -206,37 +206,37 @@
   border-radius: 12px;
   padding: 2rem;
   margin-top: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  border: 1px solid #cbd5e1;
+  box-shadow: var(--admin-shadow-lg);
+  border: 1px solid var(--admin-border);
 }
 
 .recentGamesHeader {
-  color: #1a2533;
+  color: var(--admin-text);
   font-size: 1.4rem;
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .exportButton {
-  background: #2563eb;
-  color: white;
+  background: var(--admin-accent);
+  color: var(--admin-accent-contrast);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .exportButton:hover {
   background: #1d4ed8;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .gameRecord {
@@ -244,14 +244,14 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .gameRecord:hover {
   transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--admin-shadow-md);
   background: #ffffff;
 }
 
@@ -263,24 +263,24 @@
 }
 
 .playerName {
-  color: #1a2533;
-  font-weight: 600;
+  color: var(--admin-text);
+  font-weight: 700;
   font-size: 1.1rem;
 }
 
 .gameType {
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--admin-accent);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.9rem;
-  font-weight: 600;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  font-weight: 700;
+  border: 1px solid rgba(37, 99, 235, 0.18);
 }
 
 .gameScore {
   color: #16a34a;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1rem;
 }
 
@@ -288,7 +288,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #334155;
+  color: var(--admin-muted);
   font-size: 0.9rem;
   flex-wrap: wrap;
   gap: 1rem;

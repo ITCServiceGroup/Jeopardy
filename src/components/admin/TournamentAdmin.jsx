@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
+  supabase,
   getTournaments,
   createTournament,
   getTournamentParticipants,
@@ -315,6 +316,57 @@ const TournamentAdmin = () => {
 	  };
 
 
+
+  const performRemoveAllParticipants = async () => {
+    try {
+      if (!selectedTournament) return;
+      setLoading(true);
+
+      // First clear brackets for this tournament (if any)
+      const { error: bracketDeleteError } = await supabase
+        .from('tournament_brackets')
+        .delete()
+        .eq('tournament_id', selectedTournament.id);
+      if (bracketDeleteError) {
+        throw bracketDeleteError;
+      }
+
+      // Then remove all participants
+      const toRemove = [...tournamentParticipants];
+      await Promise.all(
+        toRemove.map(p => removeParticipant(p.id, selectedTournament.id))
+      );
+
+      const removed = toRemove.length;
+      setSuccess(`Removed ${removed} participant${removed === 1 ? '' : 's'} successfully`);
+      await handleSelectTournament(selectedTournament);
+    } catch (err) {
+      setError('Failed to remove participants: ' + (err?.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveAllParticipants = () => {
+    if (!selectedTournament) return;
+    const count = tournamentParticipants.length;
+    if (count === 0) {
+      setError('No participants to remove');
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Remove All Participants',
+      message: `Remove all ${count} participant${count === 1 ? '' : 's'} from the tournament?\n\nThis will also clear any existing brackets and cannot be undone.`,
+      confirmText: 'REMOVE ALL',
+      confirmButtonStyle: 'danger',
+      requireTextConfirmation: true,
+      textConfirmationValue: 'REMOVE ALL',
+      onConfirm: () => performRemoveAllParticipants()
+    });
+  };
+
   const performRemoveParticipant = async (participantId, participantName) => {
     try {
       setLoading(true);
@@ -552,6 +604,14 @@ const TournamentAdmin = () => {
                   style={{ marginLeft: '0.5rem' }}
                 >
                   Add All Participants
+                </button>
+                <button
+                  onClick={handleRemoveAllParticipants}
+                  className={styles.dangerButton}
+                  disabled={loading}
+                  style={{ marginLeft: '0.5rem' }}
+                >
+                  Remove All Participants
                 </button>
               </div>
             </div>
