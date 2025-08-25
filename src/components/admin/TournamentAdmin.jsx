@@ -7,6 +7,7 @@ import {
   addAvailableName,
   removeAvailableName,
   registerTournamentParticipant,
+  registerTournamentParticipantsBulk,
   removeParticipant,
   startTournament,
   getTournamentBrackets,
@@ -28,8 +29,7 @@ const TournamentAdmin = () => {
   // New tournament form state
   const [newTournament, setNewTournament] = useState({
     name: '',
-    description: '',
-    max_participants: 16
+    description: ''
   });
 
   // New tournament modal state
@@ -84,7 +84,7 @@ const TournamentAdmin = () => {
     try {
       setLoading(true);
       await createTournament(newTournament);
-      setNewTournament({ name: '', description: '', max_participants: 16 });
+      setNewTournament({ name: '', description: '' });
       setSuccess('Tournament created successfully!');
       setNewTournamentModalOpen(false);
       loadData();
@@ -266,37 +266,19 @@ const TournamentAdmin = () => {
     }
   };
 
-	  const performAddAllParticipants = async (namesToAdd) => {
-	    try {
-	      setLoading(true);
-	      let added = 0;
-	      const errors = [];
-	      for (const name of namesToAdd) {
-	        try {
-	          await registerTournamentParticipant(selectedTournament.id, name);
-	          added += 1;
-	        } catch (e) {
-	          // Stop early if full; otherwise collect error and continue
-	          if ((e?.message || '').toLowerCase().includes('tournament is full')) {
-	            break;
-	          }
-	          errors.push({ name, message: e?.message || String(e) });
-	        }
-	      }
-	      if (added > 0) {
-	        setSuccess(`Added ${added} participant${added === 1 ? '' : 's'} successfully`);
-	      }
-	      if (errors.length > 0) {
-	        console.warn('Some participants could not be added:', errors);
-	        setError(`Some participants could not be added (${errors.length}). Check console for details.`);
-	      }
-	      await handleSelectTournament(selectedTournament);
-	    } catch (err) {
-	      setError('Failed to add participants: ' + err.message);
-	    } finally {
-	      setLoading(false);
-	    }
-	  };
+  const performAddAllParticipants = async (namesToAdd) => {
+    try {
+      setLoading(true);
+      const inserted = await registerTournamentParticipantsBulk(selectedTournament.id, namesToAdd);
+      const added = inserted?.length || 0;
+      setSuccess(`Added ${added} participant${added === 1 ? '' : 's'} successfully`);
+      await handleSelectTournament(selectedTournament);
+    } catch (err) {
+      setError('Failed to add participants: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 	  const handleAddAllParticipants = () => {
 	    if (!selectedTournament) return;
@@ -305,7 +287,7 @@ const TournamentAdmin = () => {
 	      .map(n => n.name)
 	      .filter(name => !tournamentParticipants.some(p => p.participant_name === name));
 
-	    const remainingSlots = Math.max(0, (selectedTournament.max_participants || 0) - tournamentParticipants.length);
+	    const remainingSlots = Infinity;
 	    if (remainingSlots <= 0) {
 	      setError('Tournament is already at maximum capacity');
 	      return;
@@ -459,7 +441,6 @@ const TournamentAdmin = () => {
                     {tournament.status.toUpperCase()}
                   </span>
                   <span>Tech: Mixed (Install & Service)</span>
-                  <span>Max: {tournament.max_participants}</span>
                 </div>
               </div>
               <div className={styles.tournamentActions}>
@@ -537,7 +518,7 @@ const TournamentAdmin = () => {
 
       <div className={styles.detailContent}>
         <div className={styles.participantsSection}>
-          <h4>Participants ({tournamentParticipants.length}/{selectedTournament.max_participants})</h4>
+          <h4>Participants ({tournamentParticipants.length})</h4>
 
           {selectedTournament.status === 'setup' && (
             <div className={styles.addParticipantSection}>
@@ -705,26 +686,7 @@ const TournamentAdmin = () => {
                 rows={3}
               />
             </div>
-            <div className={styles.formGroup}>
-              <label>Tech Type</label>
-              <input
-                type="text"
-                value="Mixed (Install & Service)"
-                disabled
-                style={{ backgroundColor: '#f3f4f6', color: '#6b7280' }}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Max Participants</label>
-              <input
-                type="number"
-                min="2"
-                max="64"
-                value={newTournament.max_participants}
-                onChange={(e) => setNewTournament({ ...newTournament, max_participants: parseInt(e.target.value) })}
-                required
-              />
-            </div>
+
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" className={styles.secondaryButton} onClick={() => setNewTournamentModalOpen(false)}>
                 Cancel

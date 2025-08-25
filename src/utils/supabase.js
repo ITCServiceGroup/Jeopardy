@@ -13,17 +13,17 @@ const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 // 1. Try window.JEOPARDY_CONFIG from config.js
 // 2. Try environment variables from Vite
 // 3. Use hardcoded defaults as last resort
-const supabaseUrl = window.JEOPARDY_CONFIG?.supabaseUrl || 
-                   import.meta.env.VITE_SUPABASE_URL || 
+const supabaseUrl = window.JEOPARDY_CONFIG?.supabaseUrl ||
+                   import.meta.env.VITE_SUPABASE_URL ||
                    DEFAULT_SUPABASE_URL;
 
-const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey || 
-                        import.meta.env.VITE_SUPABASE_ANON_KEY || 
+const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey ||
+                        import.meta.env.VITE_SUPABASE_ANON_KEY ||
                         DEFAULT_SUPABASE_ANON_KEY;
 
 // Log configuration source for debugging
-console.log('Supabase configuration source:', 
-  window.JEOPARDY_CONFIG ? 'Runtime config' : 
+console.log('Supabase configuration source:',
+  window.JEOPARDY_CONFIG ? 'Runtime config' :
   (import.meta.env.VITE_SUPABASE_URL ? 'Environment variables' : 'Default fallback'));
 
 console.log('Supabase URL being used:', supabaseUrl ? '[URL available]' : '[URL missing]');
@@ -38,7 +38,7 @@ export const getCategories = async () => {
     .from('categories')
     .select('*')
     .order('name');
-  
+
   if (error) throw error;
   return data;
 };
@@ -143,7 +143,7 @@ export const createGameSession = async (player1Name, player2Name, techTypeId) =>
 
 export const loadGameQuestions = async (techTypeId) => {
   console.log("Loading game questions for tech type ID:", techTypeId);
-  
+
   try {
     // Get categories filtered by tech type using the join table
     let { data: categoriesData, error: categoryError } = await supabase
@@ -159,7 +159,7 @@ export const loadGameQuestions = async (techTypeId) => {
 
     if (categoryError) throw categoryError;
     console.log("Category tech types loaded:", categoriesData);
-    
+
     if (!categoriesData || categoriesData.length === 0) {
       console.error("No categories found for tech type ID:", techTypeId);
       return {};
@@ -168,7 +168,7 @@ export const loadGameQuestions = async (techTypeId) => {
     // Extract the actual category objects from the nested structure
     const categories = categoriesData.map(item => item.categories).filter(Boolean);
     console.log("Categories extracted:", categories);
-    
+
     if (categories.length === 0) {
       console.error("No valid categories found for tech type ID:", techTypeId);
       return {};
@@ -177,7 +177,7 @@ export const loadGameQuestions = async (techTypeId) => {
     // Get questions for the filtered categories
     const categoryIds = categories.map(c => c.id);
     console.log("Fetching questions for category IDs:", categoryIds);
-    
+
     const { data: questionsData, error: questionError } = await supabase
       .from('questions')
       .select(`
@@ -188,7 +188,7 @@ export const loadGameQuestions = async (techTypeId) => {
 
     if (questionError) throw questionError;
     console.log("Questions loaded:", questionsData);
-    
+
     if (!questionsData || questionsData.length === 0) {
       console.error("No questions found for the categories");
       return {};
@@ -200,7 +200,7 @@ export const loadGameQuestions = async (techTypeId) => {
       const categoryQuestions = questionsData.filter(q => q.category_id === category.id);
       const selectedQuestions = {};
       let isValid = true;
-      
+
       [200, 400, 600, 800, 1000].forEach(points => {
         const candidates = categoryQuestions.filter(q => q.points === points);
         if (candidates.length === 0) {
@@ -216,12 +216,12 @@ export const loadGameQuestions = async (techTypeId) => {
           };
         }
       });
-      
+
       if (isValid) {
         validGameQuestions[category.name] = selectedQuestions;
       }
     });
-    
+
     // Randomly select 6 categories if there are more than 6
     let finalGameQuestions = {};
     const categoryNames = Object.keys(validGameQuestions);
@@ -235,7 +235,7 @@ export const loadGameQuestions = async (techTypeId) => {
     } else {
       finalGameQuestions = validGameQuestions;
     }
-    
+
     console.log("Transformed game questions:", finalGameQuestions);
     return finalGameQuestions;
   } catch (error) {
@@ -245,11 +245,11 @@ export const loadGameQuestions = async (techTypeId) => {
 };
 
 export const saveGameStatistics = async (
-  player1Name, 
-  player2Name, 
+  player1Name,
+  player2Name,
   techTypeId,   // Get this from the selected tech type
   questionId,   // Get this from the current question
-  correct, 
+  correct,
   currentPlayer
 ) => {
   try {
@@ -337,7 +337,7 @@ export const getAvailableNames = async () => {
     .from('tournament_available_names')
     .select('*')
     .order('name');
-  
+
   if (error) throw error;
   return data;
 };
@@ -369,7 +369,7 @@ export const getTournaments = async () => {
     .from('tournaments')
     .select('*')
     .order('created_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
@@ -380,7 +380,6 @@ export const createTournament = async (tournamentData) => {
     .insert([{
       name: tournamentData.name,
       description: tournamentData.description,
-      max_participants: tournamentData.max_participants,
       status: 'setup',
       created_by: 'admin',
       current_round: 1
@@ -437,9 +436,9 @@ export const deleteTournament = async (tournamentId) => {
 export const startTournament = async (tournamentId) => {
   const { data, error } = await supabase
     .from('tournaments')
-    .update({ 
-      status: 'active', 
-      started_at: new Date().toISOString() 
+    .update({
+      status: 'active',
+      started_at: new Date().toISOString()
     })
     .eq('id', tournamentId)
     .select();
@@ -466,7 +465,7 @@ export const getTournamentParticipants = async (tournamentId) => {
     .select('*')
     .eq('tournament_id', tournamentId)
     .order('seed_number', { ascending: true, nullsLast: true });
-  
+
   if (error) throw error;
   return data;
 };
@@ -475,12 +474,12 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
   // Check if tournament is accepting registrations
   const { data: tournament, error: tournamentError } = await supabase
     .from('tournaments')
-    .select('status, max_participants')
+    .select('status')
     .eq('id', tournamentId)
     .single();
 
   if (tournamentError) throw tournamentError;
-  
+
   if (tournament.status !== 'setup' && tournament.status !== 'registration') {
     throw new Error('Tournament is not accepting registrations');
   }
@@ -501,17 +500,15 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
     throw new Error('Participant already registered for this tournament');
   }
 
-  // Check participant count
-  const { count, error: countError } = await supabase
+  // Determine next seed number (append to end)
+  const { data: maxSeedRows, error: maxSeedErr } = await supabase
     .from('tournament_participants')
-    .select('id', { count: 'exact', head: true })
-    .eq('tournament_id', tournamentId);
-
-  if (countError) throw countError;
-  
-  if (count >= tournament.max_participants) {
-    throw new Error('Tournament is full');
-  }
+    .select('seed_number')
+    .eq('tournament_id', tournamentId)
+    .order('seed_number', { ascending: false })
+    .limit(1);
+  if (maxSeedErr) throw maxSeedErr;
+  const nextSeed = ((maxSeedRows && maxSeedRows.length > 0 ? (maxSeedRows[0].seed_number || 0) : 0) + 1);
 
   // Register participant
   const { data, error } = await supabase
@@ -520,13 +517,64 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
       tournament_id: tournamentId,
       participant_name: participantName,
       status: 'registered',
-      seed_number: count + 1
+      seed_number: nextSeed
     }])
     .select();
 
   if (error) throw error;
   return data[0];
 };
+
+// Bulk register participants for a tournament
+export const registerTournamentParticipantsBulk = async (tournamentId, participantNames) => {
+  if (!Array.isArray(participantNames) || participantNames.length === 0) {
+    return [];
+  }
+
+  // Ensure tournament accepts registrations
+  const { data: tournament, error: tournamentError } = await supabase
+    .from('tournaments')
+    .select('status')
+    .eq('id', tournamentId)
+    .single();
+  if (tournamentError) throw tournamentError;
+  if (tournament.status !== 'setup' && tournament.status !== 'registration') {
+    throw new Error('Tournament is not accepting registrations');
+  }
+
+  // Get existing participants to avoid duplicates and compute seed start
+  const { data: existing, error: existingErr } = await supabase
+    .from('tournament_participants')
+    .select('participant_name, seed_number')
+    .eq('tournament_id', tournamentId);
+  if (existingErr) throw existingErr;
+  const existingNames = new Set((existing || []).map(r => r.participant_name));
+  const currentMaxSeed = (existing || [])
+    .map(r => r.seed_number || 0)
+    .reduce((a, b) => Math.max(a, b), 0);
+
+  // Build rows, skipping duplicates
+  let nextSeed = currentMaxSeed + 1;
+  const rows = [];
+  for (const name of participantNames) {
+    if (existingNames.has(name)) continue;
+    rows.push({
+      tournament_id: tournamentId,
+      participant_name: name,
+      status: 'registered',
+      seed_number: nextSeed++
+    });
+  }
+  if (rows.length === 0) return [];
+
+  const { data: inserted, error: insertErr } = await supabase
+    .from('tournament_participants')
+    .insert(rows)
+    .select();
+  if (insertErr) throw insertErr;
+  return inserted;
+};
+
 
 export const removeParticipant = async (participantId, tournamentId) => {
   // If brackets exist for this tournament, remove them first to avoid FK conflicts
@@ -570,7 +618,7 @@ export const getTournamentBrackets = async (tournamentId) => {
     .select('*')
     .eq('tournament_id', tournamentId)
     .order(['round_number', 'match_number'], { ascending: true });
-  
+
   if (error) throw error;
   return data;
 };
@@ -578,13 +626,13 @@ export const getTournamentBrackets = async (tournamentId) => {
 export const generateTournamentBrackets = async (tournamentId) => {
   console.log('=== SUPABASE FUNCTION CALL ===');
   console.log('Calling generate_tournament_brackets with tournament_uuid:', tournamentId);
-  
+
   const { data, error } = await supabase
     .rpc('generate_tournament_brackets', { tournament_uuid: tournamentId });
 
   console.log('Database response - data:', data);
   console.log('Database response - error:', error);
-  
+
   if (error) {
     console.error('Database function error details:');
     console.error('- message:', error.message);
@@ -594,7 +642,7 @@ export const generateTournamentBrackets = async (tournamentId) => {
     console.error('- Full error:', error);
     throw error;
   }
-  
+
   return data;
 };
 
@@ -611,9 +659,9 @@ export const updateTournamentMatch = async (bracketId, updates) => {
 
 export const advanceTournamentWinner = async (bracketId, winnerId) => {
   const { data, error } = await supabase
-    .rpc('advance_tournament_winner', { 
-      bracket_uuid: bracketId, 
-      winner_participant_id: winnerId 
+    .rpc('advance_tournament_winner', {
+      bracket_uuid: bracketId,
+      winner_participant_id: winnerId
     });
 
   if (error) throw error;
@@ -637,7 +685,7 @@ export const createTournamentGameSession = async (tournamentId, bracketId, playe
   // Update bracket with game session
   const { data: bracket, error: bracketError } = await supabase
     .from('tournament_brackets')
-    .update({ 
+    .update({
       game_session_id: gameSession[0].id,
       match_status: 'in_progress',
       started_at: new Date().toISOString()
@@ -662,7 +710,7 @@ export const completeTournamentMatch = async (bracketId, gameSessionId, winnerId
 
     // Advance winner in tournament
     const result = await advanceTournamentWinner(bracketId, winnerId);
-    
+
     return result;
   } catch (error) {
     console.error('Error completing tournament match:', error);
@@ -699,7 +747,7 @@ export const getActiveTournaments = async () => {
     .select('*')
     .in('status', ['registration', 'active'])
     .order('created_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
@@ -714,7 +762,7 @@ export const getTournamentsForParticipant = async (participantName) => {
     .eq('tournament_participants.participant_name', participantName)
     .in('status', ['registration', 'active'])
     .order('created_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
@@ -722,7 +770,7 @@ export const getTournamentsForParticipant = async (participantName) => {
 // Tournament-specific question loading with mixed tech types and deduplication
 export const loadTournamentGameQuestions = async () => {
   console.log("Loading tournament game questions with mixed tech types");
-  
+
   try {
     // Get categories from BOTH Install (1) and Service (2) tech types
     let { data: categoriesData, error: categoryError } = await supabase
@@ -739,7 +787,7 @@ export const loadTournamentGameQuestions = async () => {
 
     if (categoryError) throw categoryError;
     console.log("All tech type categories loaded:", categoriesData);
-    
+
     if (!categoriesData || categoriesData.length === 0) {
       console.error("No categories found for any tech types");
       return {};
@@ -773,7 +821,7 @@ export const loadTournamentGameQuestions = async () => {
     });
 
     console.log("Categories after deduplication:", selectedCategories);
-    
+
     if (selectedCategories.length === 0) {
       console.error("No valid categories found after deduplication");
       return {};
@@ -782,7 +830,7 @@ export const loadTournamentGameQuestions = async () => {
     // Get questions for the selected categories
     const categoryIds = selectedCategories.map(c => c.id);
     console.log("Fetching questions for category IDs:", categoryIds);
-    
+
     const { data: questionsData, error: questionError } = await supabase
       .from('questions')
       .select(`
@@ -793,7 +841,7 @@ export const loadTournamentGameQuestions = async () => {
 
     if (questionError) throw questionError;
     console.log("Questions loaded:", questionsData);
-    
+
     if (!questionsData || questionsData.length === 0) {
       console.error("No questions found for the selected categories");
       return {};
@@ -805,7 +853,7 @@ export const loadTournamentGameQuestions = async () => {
       const categoryQuestions = questionsData.filter(q => q.category_id === category.id);
       const selectedQuestions = {};
       let isValid = true;
-      
+
       [200, 400, 600, 800, 1000].forEach(points => {
         const candidates = categoryQuestions.filter(q => q.points === points);
         if (candidates.length === 0) {
@@ -821,12 +869,12 @@ export const loadTournamentGameQuestions = async () => {
           };
         }
       });
-      
+
       if (isValid) {
         validGameQuestions[category.name] = selectedQuestions;
       }
     });
-    
+
     // Randomly select 6 categories if there are more than 6
     let finalGameQuestions = {};
     const categoryNames = Object.keys(validGameQuestions);
@@ -840,7 +888,7 @@ export const loadTournamentGameQuestions = async () => {
     } else {
       finalGameQuestions = validGameQuestions;
     }
-    
+
     console.log("Final tournament game questions:", finalGameQuestions);
     console.log("Categories selected:", Object.keys(finalGameQuestions));
     return finalGameQuestions;
