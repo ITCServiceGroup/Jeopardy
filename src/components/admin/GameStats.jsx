@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import styles from './GameStats.module.css';
+import ConfirmDialog from '../ConfirmDialog';
 
 const GameStats = () => {
-  const handleDeleteGame = async (id) => {
-    if (!confirm('Are you sure you want to delete this game record? This action cannot be undone.')) {
-      return;
-    }
-
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    requireTextConfirmation: false,
+    textConfirmationValue: '',
+    onConfirm: null
+  });
+  const performDeleteGame = async (id) => {
     try {
       const { error } = await supabase
         .from('game_sessions')
@@ -19,6 +25,19 @@ const GameStats = () => {
     } catch (err) {
       setError('Error deleting game: ' + err.message);
     }
+  };
+
+  const handleDeleteGame = (id) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Game',
+      message: 'Are you sure you want to delete this game record? This action cannot be undone.',
+      confirmText: 'DELETE',
+      confirmButtonStyle: 'danger',
+      requireTextConfirmation: true,
+      textConfirmationValue: 'DELETE',
+      onConfirm: () => performDeleteGame(id)
+    });
   };
 
   const [stats, setStats] = useState([]);
@@ -74,7 +93,7 @@ const GameStats = () => {
 
     return {
       totalGames: stats.length,
-      averageScore: (stats.reduce((acc, game) => 
+      averageScore: (stats.reduce((acc, game) =>
         acc + Math.max(game.player1_score || 0, game.player2_score || 0), 0) / stats.length).toFixed(2),
       uniquePlayers: new Set([
         ...stats.map(game => game.player1_name),
@@ -95,7 +114,7 @@ const GameStats = () => {
         <h2>Game Statistics</h2>
         <div className={styles.timeRange}>
           <label className={styles.timeRangeLabel}>Time Range:</label>
-          <select 
+          <select
             className={styles.timeRangeSelect}
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
@@ -162,9 +181,9 @@ const GameStats = () => {
               </button>
             </div>
             <div className={styles.performanceBar}>
-              <div 
+              <div
                 className={styles.performanceFill}
-                style={{ 
+                style={{
                   width: `${(Math.max(game.player1_score || 0, game.player2_score || 0) / performanceStats.highestScore) * 100}%`
                 }}
               />
@@ -177,6 +196,17 @@ const GameStats = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        requireTextConfirmation={confirmDialog.requireTextConfirmation}
+        textConfirmationValue={confirmDialog.textConfirmationValue}
+      />
     </div>
   );
 };

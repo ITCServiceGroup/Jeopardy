@@ -5,7 +5,10 @@ import Question from './components/Question';
 import Scoreboard from './components/Scoreboard';
 import LoadingSpinner from './components/LoadingSpinner';
 import AdminDashboard from './components/admin/AdminDashboard';
+import AdminGate from './components/admin/AdminGate';
 import TechTypeSelector from './components/TechTypeSelector';
+import TournamentBracketView from './components/TournamentBracketView';
+import TournamentGame from './components/TournamentGame';
 import { loadGameQuestions, saveGameStatistics } from './utils/supabase';
 import './App.css';
 
@@ -153,7 +156,9 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin" element={<AdminGate><AdminDashboard /></AdminGate>} />
+      <Route path="/tournament" element={<TournamentBracketView />} />
+      <Route path="/tournament-game" element={<TournamentGame />} />
       <Route path="/" element={
         !gameStarted ? (
           <div className="player-setup">
@@ -167,7 +172,10 @@ function App() {
                 }
               />
             }
-            <Link to="/admin" className="admin-link">Admin Dashboard</Link>
+            <div className="nav-links">
+              <Link to="/admin" className="admin-link">Admin Dashboard</Link>
+              <Link to="/tournament" className="tournament-link">Tournament Bracket</Link>
+            </div>
             {error && <div className="error-message">{error}</div>}
             {!selectedTechType ? (
               <TechTypeSelector 

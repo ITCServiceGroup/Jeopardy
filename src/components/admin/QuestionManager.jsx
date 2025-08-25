@@ -4,6 +4,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import Modal from '../Modal';
 import QuestionForm from './QuestionForm';
 import styles from './QuestionManager.module.css';
+import ConfirmDialog from '../ConfirmDialog';
 
 const QUESTION_TYPES = [
   { value: 'all', label: 'All Types' },
@@ -23,6 +24,15 @@ const QuestionManager = () => {
   const [loading, setLoading] = useState(true);
   const [filtering, setFiltering] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    requireTextConfirmation: false,
+    textConfirmationValue: '',
+    onConfirm: null
+  });
   const [modalState, setModalState] = useState({ isOpen: false, questionToEdit: null });
 
   useEffect(() => {
@@ -209,11 +219,7 @@ const QuestionManager = () => {
     }
   };
 
-  const handleDeleteQuestion = async (id) => {
-    if (!confirm('Are you sure you want to delete this question?')) {
-      return;
-    }
-
+  const performDeleteQuestion = async (id) => {
     try {
       const { error } = await supabase
         .from('questions')
@@ -227,15 +233,27 @@ const QuestionManager = () => {
     }
   };
 
+  const handleDeleteQuestion = (id) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Question',
+      message: 'Are you sure you want to delete this question?',
+      confirmText: 'Delete',
+      confirmButtonStyle: 'danger',
+      requireTextConfirmation: false,
+      onConfirm: () => performDeleteQuestion(id)
+    });
+  };
+
   const calculateSuccessRate = (question) => {
     if (!question.statistics || question.statistics.length === 0) {
       return 'No attempts';
     }
-    
+
     const correct = question.statistics.filter(stat => stat.correct).length;
     const total = question.statistics.length;
     const percentage = Math.round((correct / total) * 100);
-    
+
     return `${percentage}% (${correct}/${total})`;
   };
 
@@ -249,9 +267,9 @@ const QuestionManager = () => {
         <div className={styles.controlBar}>
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Tech Type:</span>
-            <select 
+            <select
               className={styles.filterSelect}
-              value={selectedTechType} 
+              value={selectedTechType}
               onChange={(e) => {
                 setError(null);
                 setSelectedTechType(e.target.value);
@@ -267,7 +285,7 @@ const QuestionManager = () => {
           </div>
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Category:</span>
-            <select 
+            <select
               className={styles.filterSelect}
               value={selectedCategory}
               onChange={(e) => {
@@ -286,7 +304,7 @@ const QuestionManager = () => {
           </div>
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Question Type:</span>
-            <select 
+            <select
               className={styles.filterSelect}
               value={selectedQuestionType}
               onChange={(e) => {
@@ -388,10 +406,7 @@ const QuestionManager = () => {
               </span>
               <div className={styles.cardButtons}>
                 <button
-                  onClick={() => setModalState({
-                    isOpen: true,
-                    questionToEdit: question
-                  })}
+                  onClick={() => setModalState({ isOpen: true, questionToEdit: question })}
                   className={styles.editButton}
                 >
                   Edit
@@ -407,8 +422,20 @@ const QuestionManager = () => {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        requireTextConfirmation={confirmDialog.requireTextConfirmation}
+        textConfirmationValue={confirmDialog.textConfirmationValue}
+      />
     </div>
 );
+
 };
 
 export default QuestionManager;

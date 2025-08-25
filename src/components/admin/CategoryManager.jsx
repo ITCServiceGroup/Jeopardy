@@ -4,6 +4,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import Modal from '../Modal';
 import CategoryForm from './CategoryForm';
 import styles from './CategoryManager.module.css';
+import ConfirmDialog from '../ConfirmDialog';
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -11,6 +12,15 @@ const CategoryManager = () => {
   const [modalState, setModalState] = useState({ isOpen: false, categoryToEdit: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    requireTextConfirmation: false,
+    textConfirmationValue: '',
+    onConfirm: null
+  });
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -27,7 +37,7 @@ const CategoryManager = () => {
 
       if (techTypesError) throw techTypesError;
       setTechTypes(techTypesData);
-      
+
       // Fetch categories with tech type information
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -52,7 +62,7 @@ const CategoryManager = () => {
       const categoriesWithStats = await Promise.all(
         categoriesData.map(async category => {
           const questionIds = category.questions?.map(q => q.id) || [];
-          
+
           if (questionIds.length === 0) {
             return {
               ...category,
@@ -129,7 +139,7 @@ const CategoryManager = () => {
           .from('category_tech_types')
           .delete()
           .eq('category_id', formData.id);
-          
+
         if (deleteError) throw deleteError;
       }
 
@@ -151,11 +161,7 @@ const CategoryManager = () => {
     }
   };
 
-  const handleDeleteCategory = async (id) => {
-    if (!confirm('Are you sure you want to delete this category? All associated questions will be deleted.')) {
-      return;
-    }
-
+  const performDeleteCategory = async (id) => {
     try {
       const { error } = await supabase
         .from('categories')
@@ -169,9 +175,22 @@ const CategoryManager = () => {
     }
   };
 
+  const handleDeleteCategory = (id) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Category',
+      message: 'Are you sure you want to delete this category? All associated questions will be deleted.',
+      confirmText: 'DELETE',
+      confirmButtonStyle: 'danger',
+      requireTextConfirmation: true,
+      textConfirmationValue: 'DELETE',
+      onConfirm: () => performDeleteCategory(id)
+    });
+  };
+
   const calculateSuccessRate = (category) => {
     if (!category.stats || category.stats.length === 0) return 0;
-    
+
     const correctAnswers = category.stats.filter(stat => stat.correct).length;
     return Math.round((correctAnswers / category.stats.length) * 100);
   };
@@ -191,9 +210,9 @@ const CategoryManager = () => {
         <h2>Category Management</h2>
         <div className={styles.filterBar}>
           <span className={styles.filterLabel}>Filter by Tech Type:</span>
-          <select 
+          <select
             className={styles.filterSelect}
-            value={filter} 
+            value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">All Types</option>
@@ -217,11 +236,11 @@ const CategoryManager = () => {
         Add New Category
       </button>
 
-      <Modal 
-        isOpen={modalState.isOpen} 
+      <Modal
+        isOpen={modalState.isOpen}
         onClose={() => setModalState({ isOpen: false, categoryToEdit: null })}
       >
-        <CategoryForm 
+        <CategoryForm
           techTypes={techTypes}
           initialData={modalState.categoryToEdit}
           onSubmit={async (formData) => {
@@ -256,11 +275,13 @@ const CategoryManager = () => {
                 </span>
               </div>
             </div>
+
+
             <div className={styles.cardButtons}>
               <button
-                onClick={() => setModalState({ 
-                  isOpen: true, 
-                  categoryToEdit: category 
+                onClick={() => setModalState({
+                  isOpen: true,
+                  categoryToEdit: category
                 })}
                 className={styles.editButton}
               >
@@ -276,6 +297,17 @@ const CategoryManager = () => {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        requireTextConfirmation={confirmDialog.requireTextConfirmation}
+        textConfirmationValue={confirmDialog.textConfirmationValue}
+      />
     </div>
   );
 };

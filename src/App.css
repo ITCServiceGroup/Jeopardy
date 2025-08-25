@@ -63,11 +63,17 @@ h1 {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Admin Link Styles */
-.admin-link {
+/* Navigation Links Styles */
+.nav-links {
   position: absolute;
   top: 20px;
   right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.admin-link, .tournament-link {
   padding: 8px 16px;
   background: #ffffff;
   color: #2c3e50;
@@ -79,20 +85,35 @@ h1 {
   border: 1px solid #e2e8f0;
 }
 
-.admin-link:hover {
+.admin-link:hover, .tournament-link:hover {
   background: #f8fafc;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.admin-link:active {
+.admin-link:active, .tournament-link:active {
   transform: translateY(0);
 }
 
+.tournament-link {
+  background: linear-gradient(135deg, #2ecc71 0%, #3498db 100%);
+  color: white;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.tournament-link:hover {
+  background: linear-gradient(135deg, #27ae60 0%, #2980b9 100%);
+}
+
 @media (max-width: 768px) {
-  .admin-link {
+  .nav-links {
     top: 10px;
     right: 10px;
+    gap: 5px;
+    flex-direction: column;
+  }
+  
+  .admin-link, .tournament-link {
     padding: 6px 12px;
     font-size: 0.9rem;
   }

@@ -328,3 +328,524 @@ export const getGameStats = async (filter = 'all') => {
   if (error) throw error;
   return data;
 };
+
+// Tournament Management Functions
+
+// Available Names Management
+export const getAvailableNames = async () => {
+  const { data, error } = await supabase
+    .from('tournament_available_names')
+    .select('*')
+    .order('name');
+  
+  if (error) throw error;
+  return data;
+};
+
+export const addAvailableName = async (name) => {
+  const { data, error } = await supabase
+    .from('tournament_available_names')
+    .insert([{ name, is_active: true }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const removeAvailableName = async (nameId) => {
+  const { data, error } = await supabase
+    .from('tournament_available_names')
+    .update({ is_active: false })
+    .eq('id', nameId)
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+// Tournament Management
+export const getTournaments = async () => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const createTournament = async (tournamentData) => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .insert([{
+      name: tournamentData.name,
+      description: tournamentData.description,
+      max_participants: tournamentData.max_participants,
+      status: 'setup',
+      created_by: 'admin',
+      current_round: 1
+    }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const updateTournament = async (tournamentId, updates) => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .update(updates)
+    .eq('id', tournamentId)
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const deleteTournament = async (tournamentId) => {
+  // To avoid FK conflicts (game_sessions.tournament_id -> tournaments.id),
+  // we must remove related records/refs before deleting the tournament.
+  // Order:
+  // 1) Null out bracket.game_session_id for this tournament (break FK to game_sessions)
+  // 2) Delete game_sessions for this tournament (game_statistics will cascade)
+  // 3) Delete the tournament (participants and brackets will cascade via ON DELETE CASCADE)
+
+  // 1) Clear bracket references to game sessions for this tournament
+  const { error: bracketUpdateError } = await supabase
+    .from('tournament_brackets')
+    .update({ game_session_id: null })
+    .eq('tournament_id', tournamentId);
+  if (bracketUpdateError) throw bracketUpdateError;
+
+  // 2) Delete game sessions that belong to this tournament
+  const { error: sessionsDeleteError } = await supabase
+    .from('game_sessions')
+    .delete()
+    .eq('tournament_id', tournamentId);
+  if (sessionsDeleteError) throw sessionsDeleteError;
+
+  // 3) Delete the tournament row itself (brackets/participants cascade)
+  const { error: tournamentDeleteError } = await supabase
+    .from('tournaments')
+    .delete()
+    .eq('id', tournamentId);
+  if (tournamentDeleteError) throw tournamentDeleteError;
+
+  return true;
+};
+
+export const startTournament = async (tournamentId) => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .update({ 
+      status: 'active', 
+      started_at: new Date().toISOString() 
+    })
+    .eq('id', tournamentId)
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const openTournamentRegistration = async (tournamentId) => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .update({ status: 'registration' })
+    .eq('id', tournamentId)
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+// Tournament Participants
+export const getTournamentParticipants = async (tournamentId) => {
+  const { data, error } = await supabase
+    .from('tournament_participants')
+    .select('*')
+    .eq('tournament_id', tournamentId)
+    .order('seed_number', { ascending: true, nullsLast: true });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const registerTournamentParticipant = async (tournamentId, participantName) => {
+  // Check if tournament is accepting registrations
+  const { data: tournament, error: tournamentError } = await supabase
+    .from('tournaments')
+    .select('status, max_participants')
+    .eq('id', tournamentId)
+    .single();
+
+  if (tournamentError) throw tournamentError;
+  
+  if (tournament.status !== 'setup' && tournament.status !== 'registration') {
+    throw new Error('Tournament is not accepting registrations');
+  }
+
+  // Check if participant already registered (avoid .single() to prevent 406 noise)
+  const { data: existingRows, error: existingError } = await supabase
+    .from('tournament_participants')
+    .select('id')
+    .eq('tournament_id', tournamentId)
+    .eq('participant_name', participantName)
+    .limit(1);
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  if (existingRows && existingRows.length > 0) {
+    throw new Error('Participant already registered for this tournament');
+  }
+
+  // Check participant count
+  const { count, error: countError } = await supabase
+    .from('tournament_participants')
+    .select('id', { count: 'exact', head: true })
+    .eq('tournament_id', tournamentId);
+
+  if (countError) throw countError;
+  
+  if (count >= tournament.max_participants) {
+    throw new Error('Tournament is full');
+  }
+
+  // Register participant
+  const { data, error } = await supabase
+    .from('tournament_participants')
+    .insert([{
+      tournament_id: tournamentId,
+      participant_name: participantName,
+      status: 'registered',
+      seed_number: count + 1
+    }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const removeParticipant = async (participantId, tournamentId) => {
+  // If brackets exist for this tournament, remove them first to avoid FK conflicts
+  const { count: bracketCount, error: bracketCountError } = await supabase
+    .from('tournament_brackets')
+    .select('id', { count: 'exact', head: true })
+    .eq('tournament_id', tournamentId);
+  if (bracketCountError) throw bracketCountError;
+
+  if ((bracketCount || 0) > 0) {
+    const { data: deletedBrackets, error: bracketDeleteError } = await supabase
+      .from('tournament_brackets')
+      .delete()
+      .eq('tournament_id', tournamentId)
+      .select('id');
+    if (bracketDeleteError) throw bracketDeleteError;
+    if (!deletedBrackets || deletedBrackets.length === 0) {
+      throw new Error('Unable to update brackets due to permissions. Please adjust RLS policies.');
+    }
+  }
+
+  // Now delete the participant and ensure a row was actually deleted
+  const { data: deletedRows, error: participantDeleteError } = await supabase
+    .from('tournament_participants')
+    .delete()
+    .eq('id', participantId)
+    .eq('tournament_id', tournamentId)
+    .select('*');
+
+  if (participantDeleteError) throw participantDeleteError;
+  if (!deletedRows || deletedRows.length === 0) {
+    throw new Error('Participant not found or could not be deleted due to permissions');
+  }
+  return true;
+};
+
+// Tournament Brackets
+export const getTournamentBrackets = async (tournamentId) => {
+  const { data, error } = await supabase
+    .from('tournament_brackets')
+    .select('*')
+    .eq('tournament_id', tournamentId)
+    .order(['round_number', 'match_number'], { ascending: true });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const generateTournamentBrackets = async (tournamentId) => {
+  console.log('=== SUPABASE FUNCTION CALL ===');
+  console.log('Calling generate_tournament_brackets with tournament_uuid:', tournamentId);
+  
+  const { data, error } = await supabase
+    .rpc('generate_tournament_brackets', { tournament_uuid: tournamentId });
+
+  console.log('Database response - data:', data);
+  console.log('Database response - error:', error);
+  
+  if (error) {
+    console.error('Database function error details:');
+    console.error('- message:', error.message);
+    console.error('- code:', error.code);
+    console.error('- details:', error.details);
+    console.error('- hint:', error.hint);
+    console.error('- Full error:', error);
+    throw error;
+  }
+  
+  return data;
+};
+
+export const updateTournamentMatch = async (bracketId, updates) => {
+  const { data, error } = await supabase
+    .from('tournament_brackets')
+    .update(updates)
+    .eq('id', bracketId)
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+export const advanceTournamentWinner = async (bracketId, winnerId) => {
+  const { data, error } = await supabase
+    .rpc('advance_tournament_winner', { 
+      bracket_uuid: bracketId, 
+      winner_participant_id: winnerId 
+    });
+
+  if (error) throw error;
+  return data;
+};
+
+// Tournament Game Management
+export const createTournamentGameSession = async (tournamentId, bracketId, player1Name, player2Name) => {
+  const { data: gameSession, error: gameError } = await supabase
+    .from('game_sessions')
+    .insert([{
+      player1_name: player1Name,
+      player2_name: player2Name,
+      start_time: new Date().toISOString(),
+      tournament_id: tournamentId
+    }])
+    .select();
+
+  if (gameError) throw gameError;
+
+  // Update bracket with game session
+  const { data: bracket, error: bracketError } = await supabase
+    .from('tournament_brackets')
+    .update({ 
+      game_session_id: gameSession[0].id,
+      match_status: 'in_progress',
+      started_at: new Date().toISOString()
+    })
+    .eq('id', bracketId)
+    .select();
+
+  if (bracketError) throw bracketError;
+
+  return { gameSession: gameSession[0], bracket: bracket[0] };
+};
+
+export const completeTournamentMatch = async (bracketId, gameSessionId, winnerId) => {
+  try {
+    // Update game session as completed
+    const { error: gameError } = await supabase
+      .from('game_sessions')
+      .update({ end_time: new Date().toISOString() })
+      .eq('id', gameSessionId);
+
+    if (gameError) throw gameError;
+
+    // Advance winner in tournament
+    const result = await advanceTournamentWinner(bracketId, winnerId);
+    
+    return result;
+  } catch (error) {
+    console.error('Error completing tournament match:', error);
+    throw error;
+  }
+};
+
+// Get tournament by ID with full details
+export const getTournamentDetails = async (tournamentId) => {
+  const { data: tournament, error: tournamentError } = await supabase
+    .from('tournaments')
+    .select('*')
+    .eq('id', tournamentId)
+    .single();
+
+  if (tournamentError) throw tournamentError;
+
+  const [participants, brackets] = await Promise.all([
+    getTournamentParticipants(tournamentId),
+    getTournamentBrackets(tournamentId)
+  ]);
+
+  return {
+    ...tournament,
+    participants,
+    brackets
+  };
+};
+
+// Get active tournaments for participants
+export const getActiveTournaments = async () => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('*')
+    .in('status', ['registration', 'active'])
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const getTournamentsForParticipant = async (participantName) => {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select(`
+      *,
+      tournament_participants!inner(participant_name)
+    `)
+    .eq('tournament_participants.participant_name', participantName)
+    .in('status', ['registration', 'active'])
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+// Tournament-specific question loading with mixed tech types and deduplication
+export const loadTournamentGameQuestions = async () => {
+  console.log("Loading tournament game questions with mixed tech types");
+  
+  try {
+    // Get categories from BOTH Install (1) and Service (2) tech types
+    let { data: categoriesData, error: categoryError } = await supabase
+      .from('category_tech_types')
+      .select(`
+        category_id,
+        tech_type_id,
+        categories:category_id(
+          id,
+          name
+        )
+      `)
+      .in('tech_type_id', [1, 2]);
+
+    if (categoryError) throw categoryError;
+    console.log("All tech type categories loaded:", categoriesData);
+    
+    if (!categoriesData || categoriesData.length === 0) {
+      console.error("No categories found for any tech types");
+      return {};
+    }
+
+    // Group categories by name to identify duplicates
+    const categoryGroups = {};
+    categoriesData.forEach(item => {
+      if (item.categories) {
+        const categoryName = item.categories.name;
+        if (!categoryGroups[categoryName]) {
+          categoryGroups[categoryName] = [];
+        }
+        categoryGroups[categoryName].push({
+          id: item.categories.id,
+          name: categoryName,
+          tech_type_id: item.tech_type_id
+        });
+      }
+    });
+
+    console.log("Categories grouped by name:", categoryGroups);
+
+    // For each category name, randomly select ONE version if there are duplicates
+    const selectedCategories = [];
+    Object.keys(categoryGroups).forEach(categoryName => {
+      const categoryVersions = categoryGroups[categoryName];
+      // Randomly select one version of the category
+      const selectedVersion = categoryVersions[Math.floor(Math.random() * categoryVersions.length)];
+      selectedCategories.push(selectedVersion);
+    });
+
+    console.log("Categories after deduplication:", selectedCategories);
+    
+    if (selectedCategories.length === 0) {
+      console.error("No valid categories found after deduplication");
+      return {};
+    }
+
+    // Get questions for the selected categories
+    const categoryIds = selectedCategories.map(c => c.id);
+    console.log("Fetching questions for category IDs:", categoryIds);
+    
+    const { data: questionsData, error: questionError } = await supabase
+      .from('questions')
+      .select(`
+        *,
+        category:categories(name)
+      `)
+      .in('category_id', categoryIds);
+
+    if (questionError) throw questionError;
+    console.log("Questions loaded:", questionsData);
+    
+    if (!questionsData || questionsData.length === 0) {
+      console.error("No questions found for the selected categories");
+      return {};
+    }
+
+    // Transform into the game format with random selection
+    const validGameQuestions = {};
+    selectedCategories.forEach(category => {
+      const categoryQuestions = questionsData.filter(q => q.category_id === category.id);
+      const selectedQuestions = {};
+      let isValid = true;
+      
+      [200, 400, 600, 800, 1000].forEach(points => {
+        const candidates = categoryQuestions.filter(q => q.points === points);
+        if (candidates.length === 0) {
+          isValid = false;
+        } else {
+          const randomCandidate = candidates[Math.floor(Math.random() * candidates.length)];
+          selectedQuestions[points] = {
+            id: randomCandidate.id,
+            question: randomCandidate.question,
+            correct_answers: randomCandidate.correct_answers || [randomCandidate.answer],
+            options: randomCandidate.options || [randomCandidate.answer],
+            question_type: randomCandidate.question_type || 'multiple_choice'
+          };
+        }
+      });
+      
+      if (isValid) {
+        validGameQuestions[category.name] = selectedQuestions;
+      }
+    });
+    
+    // Randomly select 6 categories if there are more than 6
+    let finalGameQuestions = {};
+    const categoryNames = Object.keys(validGameQuestions);
+    if (categoryNames.length > 6) {
+      // Shuffle the categoryNames array
+      categoryNames.sort(() => Math.random() - 0.5);
+      const selectedCategoryNames = categoryNames.slice(0, 6);
+      selectedCategoryNames.forEach(name => {
+        finalGameQuestions[name] = validGameQuestions[name];
+      });
+    } else {
+      finalGameQuestions = validGameQuestions;
+    }
+    
+    console.log("Final tournament game questions:", finalGameQuestions);
+    console.log("Categories selected:", Object.keys(finalGameQuestions));
+    return finalGameQuestions;
+  } catch (error) {
+    console.error("Error in loadTournamentGameQuestions:", error);
+    throw error;
+  }
+};
