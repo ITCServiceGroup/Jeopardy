@@ -21,16 +21,32 @@ const supabaseAnonKey = window.JEOPARDY_CONFIG?.supabaseAnonKey ||
                         import.meta.env.VITE_SUPABASE_ANON_KEY ||
                         DEFAULT_SUPABASE_ANON_KEY;
 
-// Log configuration source for debugging
-console.log('Supabase configuration source:',
-  window.JEOPARDY_CONFIG ? 'Runtime config' :
-  (import.meta.env.VITE_SUPABASE_URL ? 'Environment variables' : 'Default fallback'));
+// Create a singleton Supabase client and use an app-specific storage key to avoid GoTrue collisions
+const globalScope = typeof window !== 'undefined' ? window : globalThis;
+const SUPABASE_STORAGE_KEY = 'jeopardy_app_auth';
 
-console.log('Supabase URL being used:', supabaseUrl ? '[URL available]' : '[URL missing]');
-console.log('Supabase Key being used:', supabaseAnonKey ? '[KEY available]' : '[KEY missing]');
+if (!globalScope.__SUPABASE_LOGGED__) {
+  console.log('Supabase configuration source:',
+    window.JEOPARDY_CONFIG ? 'Runtime config' :
+    (import.meta.env.VITE_SUPABASE_URL ? 'Environment variables' : 'Default fallback'));
+  console.log('Supabase URL being used:', supabaseUrl ? '[URL available]' : '[URL missing]');
+  console.log('Supabase Key being used:', supabaseAnonKey ? '[KEY available]' : '[KEY missing]');
+  globalScope.__SUPABASE_LOGGED__ = true;
+}
 
-// Initialize Supabase client with the resolved credentials
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!globalScope.__SUPABASE_CLIENT__) {
+  globalScope.__SUPABASE_CLIENT__ = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      storageKey: SUPABASE_STORAGE_KEY,
+      autoRefreshToken: true,
+      persistSession: true,
+      // Avoid multiple clients trying to parse URL on HMR/refresh
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+export const supabase = globalScope.__SUPABASE_CLIENT__;
 
 // Category Management
 export const getCategories = async () => {
