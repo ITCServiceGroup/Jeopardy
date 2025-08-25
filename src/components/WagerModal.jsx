@@ -15,6 +15,19 @@ const WagerModal = ({
 }) => {
   const [wagerAmount, setWagerAmount] = useState('0');
   const [isEntering, setIsEntering] = useState(false);
+  const STEP = 50;
+
+  const clamp = (val) => Math.max(0, Math.min(maxWager, val));
+  const increment = () => {
+    const val = parseInt(wagerAmount || '0');
+    const next = clamp((isNaN(val) ? 0 : val) + STEP);
+    setWagerAmount(String(next));
+  };
+  const decrement = () => {
+    const val = parseInt(wagerAmount || '0');
+    const next = clamp((isNaN(val) ? 0 : val) - STEP);
+    setWagerAmount(String(next));
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -36,7 +49,7 @@ const WagerModal = ({
   const displayMaxWager = formatScore(maxWager);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="game">
+    <Modal isOpen={isOpen} onClose={onClose} variant="game" allowClose={false}>
       <div className={`${styles.wagerModal} ${isEntering ? styles.enter : ''}`}>
         <div className={styles.dailyDoubleOverlay}>
           <div className={styles.spotlight} />
@@ -54,23 +67,50 @@ const WagerModal = ({
         </div>
         
         <form onSubmit={handleSubmit} className={styles.wagerForm}>
+          <label htmlFor="wager" className={styles.wagerLabel}>Enter Your Wager:</label>
           <div className={styles.wagerInputWrapper}>
-            <label htmlFor="wager" className={styles.wagerLabel}>Enter Your Wager:</label>
             <input
               id="wager"
               type="number"
+              step={STEP}
               min="0"
               max={maxWager}
               value={wagerAmount}
               onChange={(e) => {
-                const value = parseInt(e.target.value);
+                const raw = e.target.value;
+                // Allow empty while typing so the user can clear and retype
+                if (raw === '') {
+                  setWagerAmount('');
+                  return;
+                }
+                const value = parseInt(raw);
                 if (!isNaN(value) && value >= 0 && value <= maxWager) {
-                  setWagerAmount(e.target.value);
+                  setWagerAmount(raw);
                 }
               }}
               className={styles.wagerInput}
               autoFocus
             />
+            <div className={styles.stepper} aria-hidden={false}>
+              <button
+                type="button"
+                className={styles.stepperBtn}
+                onClick={increment}
+                aria-label="Increase wager"
+                disabled={parseInt(wagerAmount || '0') >= maxWager}
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                className={styles.stepperBtn}
+                onClick={decrement}
+                aria-label="Decrease wager"
+                disabled={parseInt(wagerAmount || '0') <= 0}
+              >
+                ▼
+              </button>
+            </div>
             <span className={styles.wagerUnit}>MB</span>
           </div>
           <button type="submit" className={styles.wagerButton}>

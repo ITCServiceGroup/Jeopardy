@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GameBoard from './GameBoard';
 import Question from './Question';
@@ -37,19 +37,24 @@ const TournamentGame = () => {
   const player1Name = participant1Name;
   const player2Name = participant2Name;
 
+  const initRef = useRef(false);
   useEffect(() => {
+    if (initRef.current) return; // guard against double-invoke (StrictMode)
+    initRef.current = true;
+
     if (!bracketId || !participant1Name || !participant2Name || !tournamentId) {
       setError('Missing tournament match information');
       return;
     }
-    
+
     loadTournamentData();
   }, [bracketId, participant1Name, participant2Name, tournamentId]);
 
+  const initGameRef = useRef(false);
   useEffect(() => {
-    if (gameStarted) {
-      initializeGame();
-    }
+    if (!gameStarted || initGameRef.current) return;
+    initGameRef.current = true;
+    initializeGame();
   }, [gameStarted]);
 
   useEffect(() => {

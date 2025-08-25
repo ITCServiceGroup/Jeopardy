@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Question from './Question';
 import LoadingSpinner from './LoadingSpinner';
 import WagerModal from './WagerModal';
-import { convertToMB, formatScore } from '../utils/scoreUtils';
 import '../styles/GameBoard.css';
 
 const GameBoard = ({ 
@@ -22,28 +21,25 @@ const GameBoard = ({
   const [revealedDailyDoubles, setRevealedDailyDoubles] = useState(new Set());
 
   useEffect(() => {
-    const initializeDailyDoubles = () => {
-      if (categories.length > 0) {
-        const allQuestionKeys = [];
-        categories.forEach(category => {
-          [400, 600, 800, 1000].forEach(value => {
-            allQuestionKeys.push(`${category.name}-${value}`);
-          });
-        });
+    // Initialize Daily Doubles only once per game (after categories are loaded)
+    if (categories.length === 0 || dailyDoubles.size > 0) return;
 
-        const selectedDailyDoubles = new Set();
-        while (selectedDailyDoubles.size < 2 && allQuestionKeys.length > 0) {
-          const randomIndex = Math.floor(Math.random() * allQuestionKeys.length);
-          selectedDailyDoubles.add(allQuestionKeys[randomIndex]);
-          allQuestionKeys.splice(randomIndex, 1);
-        }
+    const allQuestionKeys = [];
+    categories.forEach(category => {
+      [400, 600, 800, 1000].forEach(value => {
+        allQuestionKeys.push(`${category.name}-${value}`);
+      });
+    });
 
-        setDailyDoubles(selectedDailyDoubles);
-      }
-    };
+    const selectedDailyDoubles = new Set();
+    while (selectedDailyDoubles.size < 2 && allQuestionKeys.length > 0) {
+      const randomIndex = Math.floor(Math.random() * allQuestionKeys.length);
+      selectedDailyDoubles.add(allQuestionKeys[randomIndex]);
+      allQuestionKeys.splice(randomIndex, 1);
+    }
 
-    initializeDailyDoubles();
-  }, [categories]);
+    setDailyDoubles(selectedDailyDoubles);
+  }, [categories, dailyDoubles]);
 
   if (!categories.length) {
     return (
@@ -103,8 +99,8 @@ const GameBoard = ({
   };
 
   const getCurrentPlayerScore = () => {
-    const score = scores[`player${currentPlayer}`] || 0;
-    return score >= 1000 ? score * 1000 : score; // Convert GB to MB if needed
+    // Scores are tracked in MB already. Return as-is.
+    return scores[`player${currentPlayer}`] || 0;
   };
 
   const getMaxWager = () => {

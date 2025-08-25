@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import Modal from './Modal';
 import '../styles/Question.css';
 
@@ -43,7 +43,7 @@ const Question = ({
 }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [confirmed, setConfirmed] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(45);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [questionType, setQuestionType] = useState('multiple_choice');
   const [isTrueFalse, setIsTrueFalse] = useState(false);

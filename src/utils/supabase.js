@@ -724,7 +724,6 @@ export const createTournamentGameSession = async (tournamentId, bracketId, playe
     })
     .eq('id', bracketId)
     .eq('match_status', 'pending')
-    .is('game_session_id', null)
     .select();
 
   // If unable to claim (someone else started it), clean up the created session and abort
