@@ -174,17 +174,23 @@ function App() {
             }
             <div className="nav-links">
               <Link to="/admin" className="admin-link">Admin Dashboard</Link>
-              <Link to="/tournament" className="tournament-link">Tournament Bracket</Link>
             </div>
             {error && <div className="error-message">{error}</div>}
             {!selectedTechType ? (
-              <TechTypeSelector 
-                onSelect={({techType, gameSession, player1Name, player2Name}) => {
-                  setSelectedTechType(techType);
-                  setPlayer1Name(player1Name);
-                  setPlayer2Name(player2Name);
-                }}
-              />
+              <>
+                <TechTypeSelector
+                  onSelect={({techType, gameSession, player1Name, player2Name}) => {
+                    setSelectedTechType(techType);
+                    setPlayer1Name(player1Name);
+                    setPlayer2Name(player2Name);
+                  }}
+                />
+                <div className="tournament-section">
+                  <Link to="/tournament" className="tournament-button">
+                    View Tournaments
+                  </Link>
+                </div>
+              </>
             ) : (
               <div className="selected-tech">
                 <h3>Selected: {selectedTechType.name} Tech</h3>

@@ -173,9 +173,9 @@ const TournamentDashboard = () => {
         </div>
 
         <div className={styles.noTournaments}>
-          <h2>No Tournaments Found</h2>
-          <p>You are not currently registered for any active tournaments.</p>
-          <p>Please contact an administrator to be added to a tournament.</p>
+          <h2>No Active Tournaments</h2>
+          <p>There are currently no active tournaments available.</p>
+          <p>Please contact an administrator to create a tournament.</p>
         </div>
       </div>
     );
@@ -231,6 +231,29 @@ const TournamentDashboard = () => {
               <h3>Participants</h3>
               <span>{tournamentDetails.participants.length}/{selectedTournament.max_participants}</span>
             </div>
+
+            {selectedTournament.status === 'completed' && (
+              <>
+                {selectedTournament.winner_name && (
+                  <div className={styles.statusCard}>
+                    <h3>🏆 Tournament Winner</h3>
+                    <span className={styles.winner}>{selectedTournament.winner_name}</span>
+                  </div>
+                )}
+                {selectedTournament.second_place_name && (
+                  <div className={styles.statusCard}>
+                    <h3>🥈 Second Place</h3>
+                    <span className={styles.secondPlace}>{selectedTournament.second_place_name}</span>
+                  </div>
+                )}
+                {selectedTournament.third_place_name && (
+                  <div className={styles.statusCard}>
+                    <h3>🥉 Third Place</h3>
+                    <span className={styles.thirdPlace}>{selectedTournament.third_place_name}</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Tournament action sections */}

@@ -658,22 +658,50 @@ export const generateTournamentBrackets = async (tournamentId) => {
   console.log('=== SUPABASE FUNCTION CALL ===');
   console.log('Calling generate_tournament_brackets with tournament_uuid:', tournamentId);
 
+  // Step 1: Get participant count
+  const { data: participants, error: participantError } = await supabase
+    .from('tournament_participants')
+    .select('id')
+    .eq('tournament_id', tournamentId)
+    .eq('status', 'registered');
+  
+  if (participantError) throw participantError;
+  
+  if (!participants || participants.length < 2) {
+    throw new Error('Tournament must have at least 2 registered participants');
+  }
+  
+  console.log(`🚀 Generating universal structure for ${participants.length} participants`);
+  
+  // Step 2: Generate and store tournament structure using JavaScript function
+  const { generateTournamentStructure } = await import('./tournamentStructure.js');
+  const structure = generateTournamentStructure(participants.length);
+  
+  // Step 3: Store structure in database
+  const { error: structureError } = await supabase
+    .rpc('store_tournament_structure', {
+      tournament_uuid: tournamentId,
+      structure_json: structure
+    });
+  
+  if (structureError) {
+    console.error('Failed to store tournament structure:', structureError);
+    throw structureError;
+  }
+  
+  console.log('✅ Tournament structure stored successfully');
+  
+  // Step 4: Generate brackets using universal system
   const { data, error } = await supabase
-    .rpc('generate_tournament_brackets', { tournament_uuid: tournamentId });
-
-  console.log('Database response - data:', data);
-  console.log('Database response - error:', error);
-
+    .rpc('generate_tournament_brackets_universal', { tournament_uuid: tournamentId });
+  
   if (error) {
-    console.error('Database function error details:');
-    console.error('- message:', error.message);
-    console.error('- code:', error.code);
-    console.error('- details:', error.details);
-    console.error('- hint:', error.hint);
-    console.error('- Full error:', error);
+    console.error('Failed to generate universal brackets:', error);
     throw error;
   }
-
+  
+  console.log(`✅ Universal brackets generated: ${data} rounds`);
+  
   return data;
 };
 
@@ -697,6 +725,54 @@ export const advanceTournamentWinner = async (bracketId, winnerId) => {
 
   if (error) throw error;
   return data;
+};
+
+// TESTING ONLY: Auto-complete a match with a random winner
+// LEGACY FUNCTION - REPLACED BY UNIVERSAL SYSTEM
+// Redirect to universal system
+export const autoCompleteMatch = async (bracketId) => {
+  console.warn('⚠️ Using deprecated legacy auto-complete. Redirecting to universal system.');
+  return await autoCompleteMatchUniversal(bracketId);
+};
+
+// ============================================================================
+// UNIVERSAL TOURNAMENT SYSTEM
+// New system using predetermined tournament structures
+// ============================================================================
+
+import {
+  createUniversalTournament,
+  generateUniversalBrackets,
+  advanceTournamentWinnerUniversal,
+  advanceTournamentByesUniversal,
+  autoCompleteMatchUniversal,
+  migrateTournamentToUniversal,
+  getTournamentStructure
+} from './tournamentIntegration.js';
+
+// Export universal tournament functions
+export {
+  createUniversalTournament,
+  generateUniversalBrackets,
+  advanceTournamentWinnerUniversal,
+  advanceTournamentByesUniversal,
+  autoCompleteMatchUniversal,
+  migrateTournamentToUniversal,
+  getTournamentStructure
+};
+
+// Universal auto-complete function (replacement for autoCompleteMatch)
+export const autoCompleteMatchUniversalWrapper = async (bracketId) => {
+  console.log(`Auto-completing match ${bracketId} using universal system`);
+  
+  const result = await autoCompleteMatchUniversal(bracketId);
+  
+  if (!result.success) {
+    throw new Error(result.error);
+  }
+  
+  console.log(`Match completed successfully. Winner: ${result.winnerId}`);
+  return result;
 };
 
 // Tournament Game Management
@@ -771,7 +847,23 @@ export const completeTournamentMatch = async (bracketId, gameSessionId, winnerId
 export const getTournamentDetails = async (tournamentId) => {
   const { data: tournament, error: tournamentError } = await supabase
     .from('tournaments')
-    .select('*')
+    .select(`
+      id,
+      name,
+      description,
+      status,
+      max_participants,
+      current_round,
+      total_rounds,
+      tournament_type,
+      created_by,
+      created_at,
+      started_at,
+      completed_at,
+      winner_name,
+      second_place_name,
+      third_place_name
+    `)
     .eq('id', tournamentId)
     .single();
 
@@ -794,7 +886,7 @@ export const getActiveTournaments = async () => {
   const { data, error } = await supabase
     .from('tournaments')
     .select('*')
-    .in('status', ['registration', 'active'])
+    .in('status', ['registration', 'active', 'completed'])
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -805,11 +897,25 @@ export const getTournamentsForParticipant = async (participantName) => {
   const { data, error } = await supabase
     .from('tournaments')
     .select(`
-      *,
+      id,
+      name,
+      description,
+      status,
+      max_participants,
+      current_round,
+      total_rounds,
+      tournament_type,
+      created_by,
+      created_at,
+      started_at,
+      completed_at,
+      winner_name,
+      second_place_name,
+      third_place_name,
       tournament_participants!inner(participant_name)
     `)
     .eq('tournament_participants.participant_name', participantName)
-    .in('status', ['registration', 'active'])
+    .in('status', ['registration', 'active', 'completed'])
     .order('created_at', { ascending: false });
 
   if (error) throw error;

@@ -287,6 +287,27 @@
   color: #92400e;
 }
 
+.winner {
+  color: #f59e0b;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.secondPlace {
+  color: #9ca3af;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-shadow: 0 2px 4px rgba(156, 163, 175, 0.3);
+}
+
+.thirdPlace {
+  color: #cd7c2f;
+  font-weight: bold;
+  font-size: 1rem;
+  text-shadow: 0 2px 4px rgba(205, 124, 47, 0.3);
+}
+
 .joinSection {
   text-align: center;
   margin-bottom: 2rem;

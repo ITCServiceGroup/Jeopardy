@@ -108,6 +108,8 @@ const BracketView = ({ tournament, currentParticipant }) => {
       {tournament.winner_name && (
         <div className={styles.winner}>
           <h2>🏆 Tournament Winner: {tournament.winner_name}</h2>
+          <h3>🥈 Second Place: {tournament.second_place_name || 'NO DATA'}</h3>
+          <h3>🥉 Third Place: {tournament.third_place_name || 'NO DATA'}</h3>
         </div>
       )}
 

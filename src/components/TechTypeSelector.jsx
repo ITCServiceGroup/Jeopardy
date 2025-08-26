@@ -111,9 +111,9 @@ const TechTypeSelector = ({ onSelect }) => {
             onClick={() => handleSelect(type)}
             disabled={loading || !player1Name.trim() || !player2Name.trim()}
           >
-            {type.name} Tech
+            <span className="button-title">{type.name} Tech</span>
             <div className="button-description">
-              {type.name === 'Install' 
+              {type.name === 'Install'
                 ? 'Test your installation knowledge'
                 : 'Test your service expertise'}
             </div>

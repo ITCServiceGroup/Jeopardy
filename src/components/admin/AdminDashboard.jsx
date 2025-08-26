@@ -73,10 +73,9 @@ const AdminDashboard = () => {
                 isOpen: true,
                 title: 'Leave Admin Dashboard',
                 message: 'Are you sure you want to leave the admin dashboard?',
-                confirmText: 'LEAVE',
+                confirmText: 'Leave',
                 confirmButtonStyle: 'danger',
-                requireTextConfirmation: true,
-                textConfirmationValue: 'LEAVE',
+                requireTextConfirmation: false,
                 onConfirm: () => { window.location.href = (import.meta.env.MODE === 'production' ? '/Jeopardy/' : '/'); }
               });
             }}

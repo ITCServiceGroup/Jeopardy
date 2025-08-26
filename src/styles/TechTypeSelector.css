@@ -1,7 +1,7 @@
 .tech-type-selector {
   text-align: center;
   padding: 2rem;
-  max-width: 600px;
+  max-width: 700px;
   margin: 2rem auto;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
@@ -92,7 +92,7 @@
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 220px;
+  width: 280px;
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
@@ -106,12 +106,18 @@
   box-shadow: none;
 }
 
+.tech-type-button .button-title {
+  white-space: nowrap;
+  display: block;
+}
+
 .tech-type-button .button-description {
   font-size: 0.9rem;
   font-weight: normal;
   text-transform: none;
   margin-top: 0.5rem;
   opacity: 0.9;
+  white-space: normal;
 }
 
 .tech-type-button:hover:not(:disabled) {

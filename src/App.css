@@ -423,6 +423,36 @@ h1 {
   transform: translateY(0);
 }
 
+/* Tournament Section */
+.tournament-section {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.tournament-button {
+  display: inline-block;
+  padding: 16px 32px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #2ecc71 0%, #3498db 50%, #1abc9c 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.tournament-button:hover {
+  background: linear-gradient(135deg, #27ae60 0%, #2980b9 50%, #16a085 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+}
+
+.tournament-button:active {
+  transform: translateY(0);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   #root {
@@ -466,5 +496,12 @@ h1 {
 
   .button-group button {
     width: 100%;
+  }
+
+  .tournament-button {
+    width: 90%;
+    max-width: 300px;
+    font-size: 1.1rem;
+    padding: 10px 20px;
   }
 }

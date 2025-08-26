@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getActiveTournaments,
-  getTournamentDetails 
+  getTournamentDetails,
+  autoCompleteMatch,
+  autoCompleteMatchUniversalWrapper
 } from '../utils/supabase';
 import BracketView from './BracketView';
 import styles from './TournamentBracketView.module.css';
@@ -14,15 +16,17 @@ const TournamentBracketView = () => {
   const [tournamentDetails, setTournamentDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [useUniversalSystem] = useState(true); // Always use universal system
+  const [autoCompletingMatches, setAutoCompletingMatches] = useState(new Set());
 
   useEffect(() => {
-    loadActiveTournaments();
+    loadAllTournaments();
   }, []);
 
-  const loadActiveTournaments = async () => {
+  const loadAllTournaments = async () => {
     try {
       setLoading(true);
-      const tournamentsData = await getActiveTournaments();
+      const tournamentsData = await getActiveTournaments(); // Note: function name is misleading, it now returns all tournaments
       setTournaments(tournamentsData);
       
       if (tournamentsData.length === 1) {
@@ -64,6 +68,36 @@ const TournamentBracketView = () => {
     });
   };
 
+  const handleAutoCompleteMatch = async (bracket) => {
+    if (autoCompletingMatches.has(bracket.id)) return;
+    
+    try {
+      setAutoCompletingMatches(prev => new Set(prev).add(bracket.id));
+      
+      console.log('Using universal tournament system');
+      await autoCompleteMatchUniversalWrapper(bracket.id);
+      
+      // Refresh tournament data after auto-completion without page reload
+      const refreshedDetails = await getTournamentDetails(selectedTournament.id);
+      setTournamentDetails(refreshedDetails);
+      
+      // Update selected tournament if it's been completed
+      const refreshedTournaments = await getActiveTournaments();
+      const updatedSelectedTournament = refreshedTournaments.find(t => t.id === selectedTournament.id);
+      if (updatedSelectedTournament) {
+        setSelectedTournament(updatedSelectedTournament);
+      }
+    } catch (error) {
+      console.error('Error auto-completing match:', error);
+      alert('Failed to auto-complete match (Universal system): ' + error.message);
+    } finally {
+      setAutoCompletingMatches(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(bracket.id);
+        return newSet;
+      });
+    }
+  };
 
   const clearMessages = () => {
     setError(null);
@@ -88,16 +122,49 @@ const TournamentBracketView = () => {
           <h2>Choose Tournament</h2>
           <div className={styles.tournamentGrid}>
             {tournaments.map(tournament => (
-              <div key={tournament.id} className={styles.tournamentCard}>
+              <div
+                key={tournament.id}
+                className={`${styles.tournamentCard} ${loading ? styles.disabled : ''}`}
+                onClick={() => !loading && handleSelectTournament(tournament)}
+              >
                 <h3>{tournament.name}</h3>
                 <p>{tournament.description}</p>
                 <div className={styles.tournamentMeta}>
-                  <span className={`${styles.status} ${styles[tournament.status]}`}>
-                    {tournament.status.toUpperCase()}
-                  </span>
+                  <div className={styles.statusRow}>
+                    <span className={`${styles.status} ${styles[tournament.status]}`}>
+                      {tournament.status.toUpperCase()}
+                    </span>
+                    {tournament.status === 'completed' && tournament.completed_at && (
+                      <div className={styles.completionDate}>
+                        {new Date(tournament.completed_at).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  {tournament.status === 'completed' && (
+                    <div className={styles.tournamentResults}>
+                      {tournament.winner_name && (
+                        <div className={styles.winner}>
+                          🏆 {tournament.winner_name}
+                        </div>
+                      )}
+                      {tournament.second_place_name && (
+                        <div className={styles.secondPlace}>
+                          🥈 {tournament.second_place_name}
+                        </div>
+                      )}
+                      {tournament.third_place_name && (
+                        <div className={styles.thirdPlace}>
+                          🥉 {tournament.third_place_name}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button 
-                  onClick={() => handleSelectTournament(tournament)}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectTournament(tournament);
+                  }}
                   className={styles.selectButton}
                   disabled={loading}
                 >
@@ -146,6 +213,9 @@ const TournamentBracketView = () => {
           tournament={tournamentDetails}
           onStartMatch={handleStartMatch}
           tournamentStatus={selectedTournament.status}
+          useUniversalSystem={useUniversalSystem}
+          onAutoCompleteMatch={handleAutoCompleteMatch}
+          autoCompletingMatches={autoCompletingMatches}
         />
       </div>
     );
@@ -170,8 +240,8 @@ const TournamentBracketView = () => {
         </div>
       ) : (
         <div className={styles.noTournaments}>
-          <h2>No Active Tournaments</h2>
-          <p>There are currently no active tournaments available.</p>
+          <h2>No Tournaments Found</h2>
+          <p>There are currently no tournaments available.</p>
           <p>Please contact an administrator to create a tournament.</p>
         </div>
       )}
@@ -180,7 +250,7 @@ const TournamentBracketView = () => {
 };
 
 // Enhanced BracketView component with click functionality
-const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => {
+const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUniversalSystem, onAutoCompleteMatch, autoCompletingMatches }) => {
   const [bracketData, setBracketData] = useState([]);
   const [maxRounds, setMaxRounds] = useState(0);
 
@@ -235,6 +305,17 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => 
     onStartMatch(bracket.id, participant1Name, participant2Name);
   };
 
+
+  const canAutoComplete = (bracket) => {
+    return (
+      tournamentStatus === 'active' &&
+      bracket.match_status === 'pending' &&
+      !bracket.bye_match &&
+      bracket.participant1_id && bracket.participant2_id &&
+      !autoCompletingMatches.has(bracket.id)
+    );
+  };
+
   if (!tournament?.brackets || tournament.brackets.length === 0) {
     return (
       <div className={styles.noBracket}>
@@ -249,8 +330,10 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => 
       <h3>Tournament Bracket</h3>
       
       {tournament.winner_name && (
-        <div className={styles.winner}>
+        <div className={styles.tournamentWinner}>
           <h2>🏆 Tournament Winner: {tournament.winner_name}</h2>
+          <h3>🥈 Second Place: {tournament.second_place_name || 'NO DATA'}</h3>
+          <h3>🥉 Third Place: {tournament.third_place_name || 'NO DATA'}</h3>
         </div>
       )}
 
@@ -284,7 +367,8 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => 
 
                   <div className={styles.participants}>
                     <div className={`${styles.participant} ${
-                      bracket.winner_id === bracket.participant1_id ? styles.winner : ''
+                      bracket.winner_id === bracket.participant1_id ? styles.winner : 
+                      (bracket.winner_id && bracket.winner_id === bracket.participant2_id ? styles.loser : '')
                     }`}>
                       <span className={styles.participantName}>
                         {getParticipantName(bracket.participant1_id)}
@@ -298,7 +382,8 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => 
                       <>
                         <div className={styles.vs}>vs</div>
                         <div className={`${styles.participant} ${
-                          bracket.winner_id === bracket.participant2_id ? styles.winner : ''
+                          bracket.winner_id === bracket.participant2_id ? styles.winner :
+                          (bracket.winner_id && bracket.winner_id === bracket.participant1_id ? styles.loser : '')
                         }`}>
                           <span className={styles.participantName}>
                             {getParticipantName(bracket.participant2_id)}
@@ -314,6 +399,21 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus }) => 
                   {canPlayMatch(bracket) && (
                     <div className={styles.playMatchPrompt}>
                       Click to Play Match
+                    </div>
+                  )}
+
+                  {canAutoComplete(bracket) && (
+                    <div className={styles.autoCompleteSection}>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAutoCompleteMatch(bracket);
+                        }}
+                        className={styles.autoCompleteButton}
+                        disabled={autoCompletingMatches.has(bracket.id)}
+                      >
+                        {autoCompletingMatches.has(bracket.id) ? 'Auto-Completing...' : '🎲 Auto-Complete (Test)'}
+                      </button>
                     </div>
                   )}
 
