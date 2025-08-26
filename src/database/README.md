@@ -135,56 +135,204 @@ npm run db:watch
 
 ## Database Schema
 
-### Categories Table
+The database schema supports a comprehensive Jeopardy-style game system with tournament functionality. The complete schema is available in the root directory as `schema.sql`.
+
+### Core Game Tables
+
+#### Tech Types
+```sql
+CREATE TABLE tech_types (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+Manages different technology categories (JavaScript, Python, etc.)
+
+#### Categories
 ```sql
 CREATE TABLE categories (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
+Question categories within tech types.
 
-### Questions Table
+#### Category Tech Types Junction
+```sql
+CREATE TABLE category_tech_types (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    tech_type_id INTEGER NOT NULL REFERENCES tech_types(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(category_id, tech_type_id)
+);
+```
+Links categories to tech types (many-to-many relationship).
+
+#### Questions
 ```sql
 CREATE TABLE questions (
-  id SERIAL PRIMARY KEY,
-  category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
-  options TEXT[] NOT NULL,
-  points INTEGER NOT NULL CHECK (points IN (200, 400, 600, 800, 1000)),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    question TEXT NOT NULL,
+    options JSONB,
+    correct_answers JSONB NOT NULL,
+    points INTEGER NOT NULL DEFAULT 100,
+    question_type VARCHAR(50) DEFAULT 'multiple_choice',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+Stores all game questions with flexible answer formats.
+
+### Tournament System
+
+#### Tournaments
+```sql
+CREATE TABLE tournaments (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    tournament_type VARCHAR(50) DEFAULT 'single_elimination',
+    status VARCHAR(50) DEFAULT 'setup',
+    max_participants INTEGER,
+    current_round INTEGER DEFAULT 1,
+    total_rounds INTEGER,
+    created_by TEXT,
+    winner_name TEXT,
+    second_place_name TEXT,
+    third_place_name TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE
 );
 ```
 
-### Game Statistics Table
+#### Tournament Participants
 ```sql
-CREATE TABLE game_statistics (
-  id SERIAL PRIMARY KEY,
-  player_name TEXT NOT NULL,
-  question_category TEXT NOT NULL,
-  question_value INTEGER NOT NULL,
-  correct BOOLEAN NOT NULL,
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE tournament_participants (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    participant_name TEXT NOT NULL,
+    seed_number INTEGER,
+    status VARCHAR(50) DEFAULT 'registered',
+    eliminated_in_round INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tournament_id, participant_name)
 );
 ```
+
+#### Tournament Brackets
+```sql
+CREATE TABLE tournament_brackets (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    round_number INTEGER NOT NULL,
+    match_number INTEGER NOT NULL,
+    participant1_id UUID REFERENCES tournament_participants(id) ON DELETE SET NULL,
+    participant2_id UUID REFERENCES tournament_participants(id) ON DELETE SET NULL,
+    winner_id UUID REFERENCES tournament_participants(id) ON DELETE SET NULL,
+    game_session_id UUID REFERENCES game_sessions(id) ON DELETE SET NULL,
+    match_status VARCHAR(50) DEFAULT 'pending',
+    bye_match BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(tournament_id, round_number, match_number)
+);
+```
+
+#### Tournament Structures
+```sql
+CREATE TABLE tournament_structures (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    tournament_id UUID UNIQUE NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    participant_count INTEGER NOT NULL,
+    total_rounds INTEGER NOT NULL,
+    structure_data JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+Stores tournament bracket structure and advancement logic.
+
+### Game Session Tables
+
+#### Game Sessions
+```sql
+CREATE TABLE game_sessions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    tournament_id UUID REFERENCES tournaments(id) ON DELETE SET NULL,
+    tech_type_id INTEGER REFERENCES tech_types(id) ON DELETE SET NULL,
+    player1_name TEXT,
+    player2_name TEXT,
+    player1_score INTEGER DEFAULT 0,
+    player2_score INTEGER DEFAULT 0,
+    winner INTEGER, -- 1 for player1, 2 for player2, NULL for tie/incomplete
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    start_time TIMESTAMP WITH TIME ZONE,
+    end_time TIMESTAMP WITH TIME ZONE
+);
+```
+
+#### Game Statistics
+```sql
+CREATE TABLE game_statistics (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    game_session_id UUID NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    tech_type_id INTEGER REFERENCES tech_types(id) ON DELETE SET NULL,
+    current_player INTEGER NOT NULL, -- 1 or 2
+    player1_name TEXT,
+    player2_name TEXT,
+    question_category TEXT,
+    correct BOOLEAN NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Tournament Management
+
+#### Tournament Available Names
+```sql
+CREATE TABLE tournament_available_names (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Database Functions
+
+The schema includes several PostgreSQL functions for tournament management:
+
+- `store_tournament_structure(tournament_uuid, structure_json)` - Stores tournament bracket structure
+- `get_tournament_structure(tournament_uuid)` - Retrieves tournament structure
+- `generate_tournament_brackets_universal(tournament_uuid)` - Creates tournament brackets
+- `advance_tournament_byes_universal(tournament_uuid)` - Handles bye advancement
+- `advance_tournament_winner_universal(bracket_uuid, winner_id)` - Advances tournament winners
+- `update_game_session_scores()` - Trigger function for score updates
+- `update_updated_at_column()` - Trigger function for timestamp updates
 
 ## Row Level Security (RLS)
 
-- All tables have RLS enabled
-- Read access is granted to all users
-- Write access for categories and questions requires authentication
-- Game statistics can be written by anyone (to allow gameplay without auth)
+All tables have RLS enabled with public access policies for game functionality:
+- Most tables allow full public access for gameplay
+- Tournament participants have restricted updates (authenticated users only)
+- Tournament brackets and participants can only be deleted during tournament setup
+- Special policies for tournament management based on tournament status
 
 ## Indexes
 
-The following indexes are created for performance:
-- `idx_game_statistics_player_name` on `game_statistics(player_name)`
-- `idx_game_statistics_timestamp` on `game_statistics(timestamp)`
-- `idx_questions_category_id` on `questions(category_id)`
-- `idx_questions_points` on `questions(points)`
+Performance indexes are created for:
+- Question lookups by category and points
+- Game statistics by session, question, and tech type
+- Tournament queries by status, round, and participants
+- Foreign key relationships for efficient joins
 
 ## Maintenance
 
