@@ -897,14 +897,44 @@ export const completeTournamentMatch = async (bracketId, gameSessionId, winnerId
       throw new Error('Match already completed');
     }
 
-    // Advance winner in tournament (DB function does the propagation)
-    const result = await advanceTournamentWinner(bracketId, winnerId);
+    // Advance winner in tournament using universal system
+    const result = await advanceTournamentWinnerUniversal(bracketId, winnerId);
+    if (!result?.success) throw new Error(result?.error || 'Failed to advance winner');
     return result;
   } catch (error) {
     console.error('Error completing tournament match:', error);
     throw error;
   }
 };
+
+// Forfeit a tournament match: mark who forfeited, advance the other participant
+export const forfeitTournamentMatch = async (bracketId, gameSessionId, forfeitingParticipantId, winnerId) => {
+  try {
+    // End game session if not already ended
+    const { error: gameError } = await supabase
+      .from('game_sessions')
+      .update({ end_time: new Date().toISOString() })
+      .eq('id', gameSessionId)
+      .is('end_time', null);
+    if (gameError) throw gameError;
+
+    // Persist forfeiting participant
+    const { error: updErr } = await supabase
+      .from('tournament_brackets')
+      .update({ forfeit_by: forfeitingParticipantId })
+      .eq('id', bracketId);
+    if (updErr) throw updErr;
+
+    // Advance winner in tournament using universal system (completes the match and propagates)
+    const result = await advanceTournamentWinnerUniversal(bracketId, winnerId);
+    if (!result?.success) throw new Error(result?.error || 'Failed to advance winner');
+    return result;
+  } catch (error) {
+    console.error('Error forfeiting tournament match:', error);
+    throw error;
+  }
+};
+
 
 // Get tournament by ID with full details
 export const getTournamentDetails = async (tournamentId) => {

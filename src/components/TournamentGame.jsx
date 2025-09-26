@@ -4,22 +4,24 @@ import GameBoard from './GameBoard';
 import Question from './Question';
 import Scoreboard from './Scoreboard';
 import LoadingSpinner from './LoadingSpinner';
-import { 
-  loadTournamentGameQuestions, 
+import {
+  loadTournamentGameQuestions,
   saveGameStatistics,
   createTournamentGameSession,
   completeTournamentMatch,
-  getTournamentDetails
+  getTournamentDetails,
+  forfeitTournamentMatch
 } from '../utils/supabase';
+import ConfirmDialog from './ConfirmDialog';
 import styles from './TournamentGame.module.css';
 
 const TournamentGame = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Tournament specific data from navigation state
   const { bracketId, participant1Name, participant2Name, tournamentId } = location.state || {};
-  
+
   const [gameQuestions, setGameQuestions] = useState(null);
   const [scores, setScores] = useState({ player1: 0, player2: 0 });
   const [currentPlayer, setCurrentPlayer] = useState(1);
@@ -32,6 +34,7 @@ const TournamentGame = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [gameSessionId, setGameSessionId] = useState(null);
   const [tournament, setTournament] = useState(null);
+  const [confirmForfeitOpen, setConfirmForfeitOpen] = useState(false);
 
   // Player names for tournament
   const player1Name = participant1Name;
@@ -67,19 +70,19 @@ const TournamentGame = () => {
     try {
       setIsLoading(true);
       setLoadingMessage('Loading tournament details...');
-      
+
       const tournamentDetails = await getTournamentDetails(tournamentId);
       setTournament(tournamentDetails);
-      
+
       // Create tournament game session
       const { gameSession } = await createTournamentGameSession(
-        tournamentId, 
-        bracketId, 
-        player1Name, 
+        tournamentId,
+        bracketId,
+        player1Name,
         player2Name
       );
       setGameSessionId(gameSession.id);
-      
+
       setGameStarted(true);
     } catch (err) {
       setError('Failed to start tournament match: ' + err.message);
@@ -92,13 +95,13 @@ const TournamentGame = () => {
     try {
       setIsLoading(true);
       setLoadingMessage('Loading Mixed Tech Type Questions...');
-      
+
       const questions = await loadTournamentGameQuestions();
-      
+
       if (!questions || Object.keys(questions).length === 0) {
         throw new Error('No questions found for tournament');
       }
-      
+
       setGameQuestions(questions);
     } catch (err) {
       setError(`Failed to load questions: ${err.message}. Please try again.`);
@@ -110,9 +113,9 @@ const TournamentGame = () => {
   const handleAnswer = async (correct, points, categoryName, questionId) => {
     try {
       const questionKey = `${categoryName}-${points}`;
-      
-      const message = correct 
-        ? `Correct! ${currentPlayer === 1 ? player1Name : player2Name} gains ${points}mb` 
+
+      const message = correct
+        ? `Correct! ${currentPlayer === 1 ? player1Name : player2Name} gains ${points}mb`
         : `Incorrect. ${currentPlayer === 1 ? player1Name : player2Name} loses ${points}mb`;
       setLoadingMessage(message);
       setIsLoading(true);
@@ -122,7 +125,7 @@ const TournamentGame = () => {
         ...scores,
         [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + scoreChange
       };
-      
+
       setScores(newScores);
       setAnsweredQuestions(prev => new Set([...prev, questionKey]));
 
@@ -156,27 +159,27 @@ const TournamentGame = () => {
 
   const endGame = async () => {
     setGameEnded(true);
-    
+
     try {
       setIsLoading(true);
       setLoadingMessage('Processing tournament match result...');
-      
+
       // Determine winner
       const winner = scores.player1 > scores.player2 ? 1 : (scores.player2 > scores.player1 ? 2 : null);
-      
+
       if (winner && gameSessionId) {
         // Get winner participant ID
         const winnerName = winner === 1 ? player1Name : player2Name;
         const winnerParticipant = tournament.participants.find(p => p.participant_name === winnerName);
-        
+
         if (winnerParticipant) {
           await completeTournamentMatch(bracketId, gameSessionId, winnerParticipant.id);
         }
       }
-      
+
       // Wait a moment to show the processing message
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
     } catch (error) {
       console.error('Error completing tournament match:', error);
       setError('Failed to process match result: ' + error.message);
@@ -189,6 +192,38 @@ const TournamentGame = () => {
   const returnToTournament = () => {
     navigate('/tournament');
   };
+
+  const handleForfeitConfirm = async () => {
+    try {
+      setIsLoading(true);
+      setLoadingMessage('Processing forfeit...');
+
+      const forfeitingName = currentPlayer === 1 ? player1Name : player2Name;
+      const winnerName = currentPlayer === 1 ? player2Name : player1Name;
+
+      const forfeitingParticipant = tournament?.participants?.find(p => p.participant_name === forfeitingName);
+      const winnerParticipant = tournament?.participants?.find(p => p.participant_name === winnerName);
+
+      if (!forfeitingParticipant || !winnerParticipant) {
+        throw new Error('Unable to resolve tournament participants for forfeit');
+      }
+
+      await forfeitTournamentMatch(bracketId, gameSessionId, forfeitingParticipant.id, winnerParticipant.id);
+
+      // Navigate back to bracket after successful forfeit
+      navigate('/tournament');
+    } catch (error) {
+      console.error('Error forfeiting match:', error);
+      setError('Failed to forfeit match: ' + (error?.message || 'Unknown error'));
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  };
+
+  const openForfeitDialog = () => setConfirmForfeitOpen(true);
+  const closeForfeitDialog = () => setConfirmForfeitOpen(false);
+
 
   if (error) {
     return (
@@ -207,8 +242,8 @@ const TournamentGame = () => {
   if (!gameStarted || !gameQuestions) {
     return (
       <div className={styles.tournamentGame}>
-        {isLoading && 
-          <LoadingSpinner 
+        {isLoading &&
+          <LoadingSpinner
             message={loadingMessage}
           />
         }
@@ -217,13 +252,13 @@ const TournamentGame = () => {
   }
 
   if (gameEnded) {
-    const winner = scores.player1 > scores.player2 ? player1Name : 
+    const winner = scores.player1 > scores.player2 ? player1Name :
                   (scores.player2 > scores.player1 ? player2Name : null);
-    
+
     return (
       <div className={styles.tournamentGame}>
-        {isLoading && 
-          <LoadingSpinner 
+        {isLoading &&
+          <LoadingSpinner
             message={loadingMessage}
           />
         }
@@ -232,7 +267,7 @@ const TournamentGame = () => {
             <h1>Tournament Match Complete!</h1>
             <p>Match: {player1Name} vs {player2Name}</p>
           </div>
-          
+
           <div className={styles.finalScores}>
             <div className={`${styles.playerScore} ${winner === player1Name ? styles.winner : ''}`}>
               <h2>{player1Name}</h2>
@@ -243,7 +278,7 @@ const TournamentGame = () => {
               <p>{scores.player2 >= 1000 ? `${scores.player2/1000}gb` : `${scores.player2}mb`}</p>
             </div>
           </div>
-          
+
           {winner ? (
             <h2 className={styles.winnerAnnouncement}>
               🏆 {winner} Advances to the Next Round!
@@ -253,7 +288,7 @@ const TournamentGame = () => {
               It's a Tie! (Tournament rules will determine advancement)
             </h2>
           )}
-          
+
           <button onClick={returnToTournament} className={styles.returnButton}>
             Return to Tournament Dashboard
           </button>
@@ -264,8 +299,8 @@ const TournamentGame = () => {
 
   return (
     <div className={styles.tournamentGame}>
-      {isLoading && 
-        <LoadingSpinner 
+      {isLoading &&
+        <LoadingSpinner
           message={loadingMessage}
           className={
             loadingMessage.includes('Correct!') ? 'correct' :
@@ -274,25 +309,25 @@ const TournamentGame = () => {
           }
         />
       }
-      
+
       <div className={styles.tournamentHeader}>
         <h1>Tournament Match</h1>
         <p>{player1Name} vs {player2Name}</p>
-        <button onClick={returnToTournament} className={styles.returnButton}>
+        <button onClick={openForfeitDialog} className={styles.returnButton}>
           Forfeit & Return to Tournament
         </button>
       </div>
-      
+
       {error && <div className={styles.errorMessage}>{error}</div>}
-      
-      <Scoreboard 
-        scores={scores} 
+
+      <Scoreboard
+        scores={scores}
         currentPlayer={currentPlayer}
         player1Name={player1Name}
         player2Name={player2Name}
       />
-      
-      <GameBoard 
+
+      <GameBoard
         categories={Object.keys(gameQuestions || {}).map(categoryName => {
           const questions = Object.entries(gameQuestions[categoryName] || {}).map(([points, q]) => ({
             ...q,
@@ -314,6 +349,19 @@ const TournamentGame = () => {
         player2Name={player2Name}
         scores={scores}
       />
+
+
+      <ConfirmDialog
+        isOpen={confirmForfeitOpen}
+        onClose={closeForfeitDialog}
+        onConfirm={handleForfeitConfirm}
+        title="Confirm Forfeit"
+        message={`Are you sure you want to forfeit this match?\n${currentPlayer === 1 ? player1Name : player2Name} will forfeit and ${currentPlayer === 1 ? player2Name : player1Name} will advance.`}
+        confirmText="Forfeit and Return"
+        cancelText="Cancel"
+        confirmButtonStyle="danger"
+      />
+
     </div>
   );
 };

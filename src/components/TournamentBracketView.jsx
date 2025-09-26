@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   getActiveTournaments,
   getTournamentDetails,
   autoCompleteMatch,
@@ -28,7 +28,7 @@ const TournamentBracketView = () => {
       setLoading(true);
       const tournamentsData = await getActiveTournaments(); // Note: function name is misleading, it now returns all tournaments
       setTournaments(tournamentsData);
-      
+
       if (tournamentsData.length === 1) {
         // Auto-select if only one tournament
         const tournament = tournamentsData[0];
@@ -58,29 +58,29 @@ const TournamentBracketView = () => {
   };
 
   const handleStartMatch = (bracketId, participant1Name, participant2Name) => {
-    navigate('/tournament-game', { 
-      state: { 
-        bracketId, 
+    navigate('/tournament-game', {
+      state: {
+        bracketId,
         participant1Name,
         participant2Name,
         tournamentId: selectedTournament.id
-      } 
+      }
     });
   };
 
   const handleAutoCompleteMatch = async (bracket) => {
     if (autoCompletingMatches.has(bracket.id)) return;
-    
+
     try {
       setAutoCompletingMatches(prev => new Set(prev).add(bracket.id));
-      
+
       console.log('Using universal tournament system');
       await autoCompleteMatchUniversalWrapper(bracket.id);
-      
+
       // Refresh tournament data after auto-completion without page reload
       const refreshedDetails = await getTournamentDetails(selectedTournament.id);
       setTournamentDetails(refreshedDetails);
-      
+
       // Update selected tournament if it's been completed
       const refreshedTournaments = await getActiveTournaments();
       const updatedSelectedTournament = refreshedTournaments.find(t => t.id === selectedTournament.id);
@@ -110,7 +110,7 @@ const TournamentBracketView = () => {
       <div className={styles.bracketView}>
         <div className={styles.header}>
           <h1>Select Tournament</h1>
-          <button 
+          <button
             onClick={() => navigate('/')}
             className={styles.backButton}
           >
@@ -192,14 +192,14 @@ const TournamentBracketView = () => {
           <h1>{selectedTournament.name}</h1>
           <div className={styles.headerActions}>
             {tournaments.length > 1 && (
-              <button 
+              <button
                 onClick={() => setSelectedTournament(null)}
                 className={styles.backButton}
               >
                 Back to Tournaments
               </button>
             )}
-            <button 
+            <button
               onClick={() => navigate('/')}
               className={styles.backButton}
             >
@@ -209,7 +209,7 @@ const TournamentBracketView = () => {
         </div>
 
         {/* Enhanced Bracket View with click handlers */}
-        <EnhancedBracketView 
+        <EnhancedBracketView
           tournament={tournamentDetails}
           onStartMatch={handleStartMatch}
           tournamentStatus={selectedTournament.status}
@@ -226,7 +226,7 @@ const TournamentBracketView = () => {
     <div className={styles.bracketView}>
       <div className={styles.header}>
         <h1>Tournament Bracket</h1>
-        <button 
+        <button
           onClick={() => navigate('/')}
           className={styles.backButton}
         >
@@ -251,6 +251,8 @@ const TournamentBracketView = () => {
 
 // Enhanced BracketView component with click functionality
 const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUniversalSystem, onAutoCompleteMatch, autoCompletingMatches }) => {
+  const showAutoComplete = false; // Hide Auto-Complete (Test) button without removing functionality
+
   const [bracketData, setBracketData] = useState([]);
   const [maxRounds, setMaxRounds] = useState(0);
 
@@ -267,7 +269,7 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
     tournament.brackets.forEach(bracket => {
       const round = bracket.round_number;
       maxRound = Math.max(maxRound, round);
-      
+
       if (!rounds[round]) {
         rounds[round] = [];
       }
@@ -328,7 +330,7 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
   return (
     <div className={styles.bracketContainer}>
       <h3>Tournament Bracket</h3>
-      
+
       {tournament.winner_name && (
         <div className={styles.tournamentWinner}>
           <h2>🏆 Tournament Winner: {tournament.winner_name}</h2>
@@ -343,11 +345,11 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
             <h4 className={styles.roundTitle}>
               {getRoundName(parseInt(roundNumber), maxRounds)}
             </h4>
-            
+
             <div className={styles.matches}>
               {bracketData[roundNumber].map((bracket) => (
-                <div 
-                  key={bracket.id} 
+                <div
+                  key={bracket.id}
                   className={`${styles.match} ${
                     bracket.bye_match ? styles.byeMatch : ''
                   } ${
@@ -367,7 +369,7 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
 
                   <div className={styles.participants}>
                     <div className={`${styles.participant} ${
-                      bracket.winner_id === bracket.participant1_id ? styles.winner : 
+                      bracket.winner_id === bracket.participant1_id ? styles.winner :
                       (bracket.winner_id && bracket.winner_id === bracket.participant2_id ? styles.loser : '')
                     }`}>
                       <span className={styles.participantName}>
@@ -402,9 +404,9 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
                     </div>
                   )}
 
-                  {canAutoComplete(bracket) && (
+                  {showAutoComplete && canAutoComplete(bracket) && (
                     <div className={styles.autoCompleteSection}>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onAutoCompleteMatch(bracket);
@@ -434,7 +436,7 @@ const EnhancedBracketView = ({ tournament, onStartMatch, tournamentStatus, useUn
 
 const getRoundName = (roundNumber, maxRounds) => {
   if (!maxRounds) return `Round ${roundNumber}`;
-  
+
   const remainingRounds = maxRounds - roundNumber + 1;
   switch (remainingRounds) {
     case 1:

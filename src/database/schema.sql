@@ -102,6 +102,11 @@ CREATE TABLE tournament_brackets (
     UNIQUE(tournament_id, round_number, match_number)
 );
 
+-- Track forfeits on a match (who forfeited)
+ALTER TABLE tournament_brackets
+ADD COLUMN IF NOT EXISTS forfeit_by UUID REFERENCES tournament_participants(id) ON DELETE SET NULL;
+
+
 -- Game sessions table (tracks individual games)
 CREATE TABLE game_sessions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,

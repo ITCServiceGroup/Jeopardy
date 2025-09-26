@@ -42,6 +42,7 @@ const BracketView = ({ tournament, currentParticipant }) => {
 
   const getMatchStatus = (bracket) => {
     if (bracket.bye_match) return 'BYE';
+    if (bracket.forfeit_by) return 'FORFEIT';
     return bracket.match_status.toUpperCase();
   };
 

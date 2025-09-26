@@ -138,6 +138,12 @@
   color: #1e40af;
 }
 
+
+.matchStatus.forfeit {
+  background: #fee2e2; /* red-100 */
+  color: #991b1b;      /* red-800 */
+}
+
 .matchStatus.bye {
   background: #e5e7eb;
   color: #374151;
@@ -272,27 +278,27 @@
   .bracketView {
     padding: 1rem;
   }
-  
+
   .bracketContainer {
     gap: 1rem;
   }
-  
+
   .round {
     min-width: 200px;
   }
-  
+
   .roundTitle {
     font-size: 1rem;
   }
-  
+
   .match {
     padding: 0.75rem;
   }
-  
+
   .participantName {
     font-size: 0.8rem;
   }
-  
+
   .legendItems {
     flex-direction: column;
     gap: 0.5rem;
