@@ -152,10 +152,14 @@ CREATE TABLE markets (
 -- Associate tournaments and available names with a market (nullable for backward compatibility)
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS market_id UUID REFERENCES markets(id) ON DELETE SET NULL;
 ALTER TABLE tournament_available_names ADD COLUMN IF NOT EXISTS market_id UUID REFERENCES markets(id) ON DELETE SET NULL;
+ALTER TABLE tournament_participants ADD COLUMN IF NOT EXISTS market_id UUID REFERENCES markets(id) ON DELETE SET NULL;
+
 
 -- Indexes for market-related queries
 CREATE INDEX IF NOT EXISTS idx_markets_active ON markets(is_active);
 CREATE INDEX IF NOT EXISTS idx_tournaments_market_id ON tournaments(market_id);
+CREATE INDEX IF NOT EXISTS idx_tournament_participants_market_id ON tournament_participants(market_id);
+
 CREATE INDEX IF NOT EXISTS idx_tournament_available_names_market_id ON tournament_available_names(market_id);
 
 

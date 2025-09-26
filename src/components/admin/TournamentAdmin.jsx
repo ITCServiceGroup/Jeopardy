@@ -7,6 +7,7 @@ import {
   getAvailableNames,
   addAvailableName,
   removeAvailableName,
+  updateAvailableName,
   registerTournamentParticipant,
   registerTournamentParticipantsBulk,
   removeParticipant,
@@ -15,7 +16,7 @@ import {
   deleteTournament,
   generateTournamentBrackets,
   getMarkets,
-  createMarket
+  createMarket,
 } from '../../utils/supabase';
 import ConfirmDialog from '../ConfirmDialog';
 import Modal from '../Modal';
@@ -46,6 +47,10 @@ const TournamentAdmin = () => {
   const [selectedMarketId, setSelectedMarketId] = useState(null);
   const [newMarketModalOpen, setNewMarketModalOpen] = useState(false);
   const [newMarketName, setNewMarketName] = useState('');
+
+  // Edit available name state
+  const [editNameModalOpen, setEditNameModalOpen] = useState(false);
+  const [editName, setEditName] = useState({ id: null, name: '', market_id: null });
 
   // New available name state
   const [newAvailableName, setNewAvailableName] = useState('');
@@ -166,6 +171,8 @@ const TournamentAdmin = () => {
       title: 'Remove Name',
       message: 'Are you sure you want to remove this name?',
       confirmText: 'REMOVE',
+
+
       confirmButtonStyle: 'danger',
       requireTextConfirmation: true,
       textConfirmationValue: 'REMOVE',
@@ -427,6 +434,8 @@ const TournamentAdmin = () => {
       title: 'Remove Participant',
       message: `Are you sure you want to remove ${participantName} from this tournament?`,
       confirmText: 'Remove',
+
+
       confirmButtonStyle: 'danger',
       requireTextConfirmation: false,
       onConfirm: () => performRemoveParticipant(participantId, participantName)
@@ -463,6 +472,8 @@ const TournamentAdmin = () => {
       default:
         title = 'Delete Tournament';
         message = `Are you sure you want to delete "${tournamentName}"?\n\nThis action cannot be undone.`;
+
+
         requireTextConfirmation = false;
     }
 
@@ -504,9 +515,12 @@ const TournamentAdmin = () => {
     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
   };
 
+
+
   const renderTournamentsTab = () => (
     <div className={styles.tournamentsTab}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+
         <button
           onClick={() => { setNewTournament({ name: '', description: '', market_id: selectedMarketId }); setNewTournamentModalOpen(true); }}
           className={styles.primaryButton}
@@ -581,19 +595,56 @@ const TournamentAdmin = () => {
         <div className={styles.namesList}>
           {availableNames.filter(n => n.is_active).map(name => (
             <div key={name.id} className={styles.nameCard}>
-              <span>{name.name}</span>
-              <button
-                onClick={() => handleRemoveAvailableName(name.id)}
-                className={styles.dangerButton}
-              >
-                Remove
-              </button>
+              <span className={styles.nameText} title={name.name}>{name.name}</span>
+              <div className={styles.nameActions}>
+                <button
+                  onClick={() => handleOpenEditName(name)}
+                  className={styles.secondaryButton}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleRemoveAvailableName(name.id)}
+                  className={styles.dangerButton}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
+
+  const handleOpenEditName = (name) => {
+    setEditName({ id: name.id, name: name.name, market_id: name.market_id || '' });
+    setEditNameModalOpen(true);
+  };
+
+  const handleUpdateAvailableName = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const updates = {
+        name: (editName.name || '').trim(),
+        market_id: editName.market_id || null,
+      };
+      if (!updates.name) {
+        setError('Name cannot be empty.');
+        return;
+      }
+      await updateAvailableName(editName.id, updates);
+      setSuccess('Available name updated successfully!');
+      setEditNameModalOpen(false);
+      await loadData(selectedMarketId);
+    } catch (err) {
+      setError('Failed to update available name: ' + (err?.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const renderTournamentDetail = () => (
     <div className={styles.tournamentDetail}>
@@ -826,6 +877,8 @@ const TournamentAdmin = () => {
             </div>
 
 
+
+
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" className={styles.secondaryButton} onClick={() => setNewTournamentModalOpen(false)}>
                 Cancel
@@ -864,6 +917,45 @@ const TournamentAdmin = () => {
         </div>
       </Modal>
 
+      {/* Edit Available Name Modal */}
+      <Modal isOpen={editNameModalOpen} onClose={() => setEditNameModalOpen(false)}>
+        <div className={styles.section}>
+          <h3>Edit Available Name</h3>
+          <form onSubmit={handleUpdateAvailableName} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label>Name</label>
+              <input
+                type="text"
+                value={editName.name}
+                onChange={(e) => setEditName({ ...editName, name: e.target.value })}
+                placeholder="Technician name"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Market</label>
+              <select
+                value={editName.market_id || ''}
+                onChange={(e) => setEditName({ ...editName, market_id: e.target.value || null })}
+              >
+                <option value="">Unassigned</option>
+                {markets.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" onClick={() => setEditNameModalOpen(false)} className={styles.secondaryButton}>
+                Cancel
+              </button>
+              <button type="submit" className={styles.primaryButton} disabled={loading}>
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+
       {error && (
         <div className={styles.error} onClick={clearMessages}>
           {error}
@@ -900,6 +992,8 @@ const TournamentAdmin = () => {
           </div>
         </>
       )}
+
+
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}

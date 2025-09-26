@@ -405,6 +405,21 @@ export const removeAvailableName = async (nameId) => {
   return data[0];
 };
 
+
+export const updateAvailableName = async (nameId, updates) => {
+  const payload = {
+    ...(updates.name !== undefined ? { name: updates.name } : {}),
+    ...(updates.market_id !== undefined ? { market_id: updates.market_id } : {}),
+  };
+  const { data, error } = await supabase
+    .from('tournament_available_names')
+    .update(payload)
+    .eq('id', nameId)
+    .select();
+  if (error) throw error;
+  return data[0];
+};
+
 // Tournament Management
 export const getTournaments = async (marketId = null) => {
   let query = supabase
@@ -522,7 +537,7 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
   // Check if tournament is accepting registrations
   const { data: tournament, error: tournamentError } = await supabase
     .from('tournaments')
-    .select('status')
+    .select('status, market_id')
     .eq('id', tournamentId)
     .single();
 
@@ -567,7 +582,8 @@ export const registerTournamentParticipant = async (tournamentId, participantNam
         tournament_id: tournamentId,
         participant_name: participantName,
         status: 'registered',
-        seed_number: nextSeed
+        seed_number: nextSeed,
+        market_id: tournament?.market_id || null
       }])
       .select();
   } catch (e) {
@@ -636,8 +652,23 @@ export const registerTournamentParticipantsBulk = async (tournamentId, participa
     .select();
   if (insertErr) throw insertErr;
   return inserted;
+
 };
 
+
+export const updateTournamentParticipant = async (participantId, updates) => {
+  const payload = {
+    ...(updates.participant_name !== undefined ? { participant_name: updates.participant_name } : {}),
+    ...(updates.market_id !== undefined ? { market_id: updates.market_id } : {}),
+  };
+  const { data, error } = await supabase
+    .from('tournament_participants')
+    .update(payload)
+    .eq('id', participantId)
+    .select();
+  if (error) throw error;
+  return data[0];
+};
 
 export const removeParticipant = async (participantId, tournamentId) => {
   // If brackets exist for this tournament, remove them first to avoid FK conflicts
