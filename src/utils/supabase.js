@@ -346,11 +346,10 @@ export const getGameStats = async (filter = 'all') => {
 };
 
 // Tournament Management Functions
-
-// Available Names Management
-export const getAvailableNames = async () => {
+// Markets Management
+export const getMarkets = async () => {
   const { data, error } = await supabase
-    .from('tournament_available_names')
+    .from('markets')
     .select('*')
     .order('name');
 
@@ -358,10 +357,37 @@ export const getAvailableNames = async () => {
   return data;
 };
 
-export const addAvailableName = async (name) => {
+export const createMarket = async (name) => {
+  const { data, error } = await supabase
+    .from('markets')
+    .insert([{ name, is_active: true }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
+};
+
+
+// Available Names Management
+export const getAvailableNames = async (marketId = null) => {
+  let query = supabase
+    .from('tournament_available_names')
+    .select('*')
+    .order('name');
+
+  if (marketId) {
+    query = query.eq('market_id', marketId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+};
+
+export const addAvailableName = async (name, marketId = null) => {
   const { data, error } = await supabase
     .from('tournament_available_names')
-    .insert([{ name, is_active: true }])
+    .insert([{ name, is_active: true, market_id: marketId }])
     .select();
 
   if (error) throw error;
@@ -380,12 +406,17 @@ export const removeAvailableName = async (nameId) => {
 };
 
 // Tournament Management
-export const getTournaments = async () => {
-  const { data, error } = await supabase
+export const getTournaments = async (marketId = null) => {
+  let query = supabase
     .from('tournaments')
     .select('*')
     .order('created_at', { ascending: false });
 
+  if (marketId) {
+    query = query.eq('market_id', marketId);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 };
@@ -398,7 +429,8 @@ export const createTournament = async (tournamentData) => {
       description: tournamentData.description,
       status: 'setup',
       created_by: 'admin',
-      current_round: 1
+      current_round: 1,
+      market_id: tournamentData.market_id || null
     }])
     .select();
 
@@ -664,44 +696,44 @@ export const generateTournamentBrackets = async (tournamentId) => {
     .select('id')
     .eq('tournament_id', tournamentId)
     .eq('status', 'registered');
-  
+
   if (participantError) throw participantError;
-  
+
   if (!participants || participants.length < 2) {
     throw new Error('Tournament must have at least 2 registered participants');
   }
-  
+
   console.log(`🚀 Generating universal structure for ${participants.length} participants`);
-  
+
   // Step 2: Generate and store tournament structure using JavaScript function
   const { generateTournamentStructure } = await import('./tournamentStructure.js');
   const structure = generateTournamentStructure(participants.length);
-  
+
   // Step 3: Store structure in database
   const { error: structureError } = await supabase
     .rpc('store_tournament_structure', {
       tournament_uuid: tournamentId,
       structure_json: structure
     });
-  
+
   if (structureError) {
     console.error('Failed to store tournament structure:', structureError);
     throw structureError;
   }
-  
+
   console.log('✅ Tournament structure stored successfully');
-  
+
   // Step 4: Generate brackets using universal system
   const { data, error } = await supabase
     .rpc('generate_tournament_brackets_universal', { tournament_uuid: tournamentId });
-  
+
   if (error) {
     console.error('Failed to generate universal brackets:', error);
     throw error;
   }
-  
+
   console.log(`✅ Universal brackets generated: ${data} rounds`);
-  
+
   return data;
 };
 
@@ -764,13 +796,13 @@ export {
 // Universal auto-complete function (replacement for autoCompleteMatch)
 export const autoCompleteMatchUniversalWrapper = async (bracketId) => {
   console.log(`Auto-completing match ${bracketId} using universal system`);
-  
+
   const result = await autoCompleteMatchUniversal(bracketId);
-  
+
   if (!result.success) {
     throw new Error(result.error);
   }
-  
+
   console.log(`Match completed successfully. Winner: ${result.winnerId}`);
   return result;
 };

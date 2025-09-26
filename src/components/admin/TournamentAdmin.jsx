@@ -13,7 +13,9 @@ import {
   startTournament,
   getTournamentBrackets,
   deleteTournament,
-  generateTournamentBrackets
+  generateTournamentBrackets,
+  getMarkets,
+  createMarket
 } from '../../utils/supabase';
 import ConfirmDialog from '../ConfirmDialog';
 import Modal from '../Modal';
@@ -30,12 +32,20 @@ const TournamentAdmin = () => {
   // New tournament form state
   const [newTournament, setNewTournament] = useState({
     name: '',
-    description: ''
+    description: '',
+    market_id: null
   });
 
   // New tournament modal state
   const [newTournamentModalOpen, setNewTournamentModalOpen] = useState(false);
 
+
+
+  // Markets state
+  const [markets, setMarkets] = useState([]);
+  const [selectedMarketId, setSelectedMarketId] = useState(null);
+  const [newMarketModalOpen, setNewMarketModalOpen] = useState(false);
+  const [newMarketName, setNewMarketName] = useState('');
 
   // New available name state
   const [newAvailableName, setNewAvailableName] = useState('');
@@ -60,17 +70,19 @@ const TournamentAdmin = () => {
   });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(selectedMarketId);
+  }, [selectedMarketId]);
 
-  const loadData = async () => {
+  const loadData = async (marketId = selectedMarketId) => {
     try {
       setLoading(true);
-      const [tournamentsData, namesData] = await Promise.all([
-        getTournaments(),
-        getAvailableNames()
+      const [marketsData, tournamentsData, namesData] = await Promise.all([
+        getMarkets(),
+        getTournaments(marketId),
+        getAvailableNames(marketId)
       ]);
 
+      setMarkets(marketsData);
       setTournaments(tournamentsData);
       setAvailableNames(namesData);
     } catch (err) {
@@ -80,12 +92,30 @@ const TournamentAdmin = () => {
     }
   };
 
+  const handleCreateMarket = async (e) => {
+    e.preventDefault();
+    if (!newMarketName.trim()) return;
+    try {
+      setLoading(true);
+      await createMarket(newMarketName.trim());
+      setNewMarketName('');
+      setNewMarketModalOpen(false);
+      setSuccess('Market created successfully!');
+      loadData();
+    } catch (err) {
+      setError('Failed to create market: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleCreateTournament = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       await createTournament(newTournament);
-      setNewTournament({ name: '', description: '' });
+      setNewTournament({ name: '', description: '', market_id: selectedMarketId || null });
       setSuccess('Tournament created successfully!');
       setNewTournamentModalOpen(false);
       loadData();
@@ -102,10 +132,14 @@ const TournamentAdmin = () => {
 
     try {
       setLoading(true);
-      await addAvailableName(newAvailableName.trim());
+      if (!selectedMarketId) {
+        setError('Please select a Market from the filter above before adding a name.');
+        return;
+      }
+      await addAvailableName(newAvailableName.trim(), selectedMarketId);
       setNewAvailableName('');
       setSuccess('Name added successfully!');
-      loadData();
+      loadData(selectedMarketId);
     } catch (err) {
       setError('Failed to add name: ' + err.message);
     } finally {
@@ -143,6 +177,9 @@ const TournamentAdmin = () => {
     try {
       setLoading(true);
       setSelectedTournament(tournament);
+      if (tournament?.market_id && tournament.market_id !== selectedMarketId) {
+        setSelectedMarketId(tournament.market_id);
+      }
       const [participants, brackets] = await Promise.all([
         getTournamentParticipants(tournament.id),
         getTournamentBrackets(tournament.id)
@@ -471,7 +508,7 @@ const TournamentAdmin = () => {
     <div className={styles.tournamentsTab}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
         <button
-          onClick={() => setNewTournamentModalOpen(true)}
+          onClick={() => { setNewTournament({ name: '', description: '', market_id: selectedMarketId }); setNewTournamentModalOpen(true); }}
           className={styles.primaryButton}
           disabled={loading}
           style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
@@ -492,6 +529,7 @@ const TournamentAdmin = () => {
                   <span className={`${styles.status} ${styles[tournament.status]}`}>
                     {tournament.status.toUpperCase()}
                   </span>
+                  <span>Market: {markets.find(m => m.id === tournament.market_id)?.name || '—'}</span>
                   <span>Tech: Mixed (Install & Service)</span>
                 </div>
               </div>
@@ -531,6 +569,7 @@ const TournamentAdmin = () => {
               required
             />
           </div>
+
           <button type="submit" disabled={loading} className={styles.primaryButton}>
             Add Name
           </button>
@@ -724,6 +763,32 @@ const TournamentAdmin = () => {
   return (
     <div className={styles.tournamentAdmin}>
 
+      {/* Market Filter */}
+      <div className={styles.section}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem' }}>
+          <div className={styles.formGroup}>
+            <label>Market</label>
+            <select
+              value={selectedMarketId || ''}
+              onChange={(e) => setSelectedMarketId(e.target.value || null)}
+            >
+              <option value="">All Markets</option>
+              {markets.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => setNewMarketModalOpen(true)}
+            className={styles.secondaryButton}
+            disabled={loading}
+          >
+            New Market
+          </button>
+        </div>
+      </div>
+
+
       {/* New Tournament Modal */}
       <Modal isOpen={newTournamentModalOpen} onClose={() => setNewTournamentModalOpen(false)}>
         <div className={styles.section}>
@@ -747,6 +812,20 @@ const TournamentAdmin = () => {
               />
             </div>
 
+            <div className={styles.formGroup}>
+              <label>Market</label>
+              <select
+                value={newTournament.market_id || selectedMarketId || ''}
+                onChange={(e) => setNewTournament({ ...newTournament, market_id: e.target.value || null })}
+              >
+                <option value="">Unassigned</option>
+                {markets.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+
+
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" className={styles.secondaryButton} onClick={() => setNewTournamentModalOpen(false)}>
                 Cancel
@@ -758,6 +837,33 @@ const TournamentAdmin = () => {
           </form>
         </div>
       </Modal>
+
+      {/* New Market Modal */}
+      <Modal isOpen={newMarketModalOpen} onClose={() => setNewMarketModalOpen(false)}>
+        <div className={styles.section}>
+          <h3>Create New Market</h3>
+          <form onSubmit={handleCreateMarket} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label>Market Name</label>
+              <input
+                type="text"
+                value={newMarketName}
+                onChange={(e) => setNewMarketName(e.target.value)}
+                required
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button type="button" className={styles.secondaryButton} onClick={() => setNewMarketModalOpen(false)}>
+                Cancel
+              </button>
+              <button type="submit" disabled={loading} className={styles.primaryButton}>
+                Create Market
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
       {error && (
         <div className={styles.error} onClick={clearMessages}>
           {error}
