@@ -816,9 +816,10 @@ const TournamentAdmin = () => {
 
       {/* Market Filter */}
       <div className={styles.section}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem' }}>
-          <div className={styles.formGroup}>
-            <label>Market</label>
+        <h3>Market</h3>
+        <div className={styles.marketBar}>
+          <div className={`${styles.formGroup} ${styles.centeredFormGroup}`}>
+            <label className={styles.srOnly}>Market</label>
             <select
               value={selectedMarketId || ''}
               onChange={(e) => setSelectedMarketId(e.target.value || null)}
