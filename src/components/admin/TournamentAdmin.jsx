@@ -815,30 +815,32 @@ const TournamentAdmin = () => {
     <div className={styles.tournamentAdmin}>
 
       {/* Market Filter */}
-      <div className={styles.section}>
-        <h3>Market</h3>
-        <div className={styles.marketBar}>
-          <div className={`${styles.formGroup} ${styles.centeredFormGroup}`}>
-            <label className={styles.srOnly}>Market</label>
-            <select
-              value={selectedMarketId || ''}
-              onChange={(e) => setSelectedMarketId(e.target.value || null)}
+      {!selectedTournament && (
+        <div className={styles.section}>
+          <h3>Market</h3>
+          <div className={styles.marketBar}>
+            <div className={`${styles.formGroup} ${styles.centeredFormGroup}`}>
+              <label className={styles.srOnly}>Market</label>
+              <select
+                value={selectedMarketId || ''}
+                onChange={(e) => setSelectedMarketId(e.target.value || null)}
+              >
+                <option value="">All Markets</option>
+                {markets.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => setNewMarketModalOpen(true)}
+              className={styles.secondaryButton}
+              disabled={loading}
             >
-              <option value="">All Markets</option>
-              {markets.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
+              New Market
+            </button>
           </div>
-          <button
-            onClick={() => setNewMarketModalOpen(true)}
-            className={styles.secondaryButton}
-            disabled={loading}
-          >
-            New Market
-          </button>
         </div>
-      </div>
+      )}
 
 
       {/* New Tournament Modal */}
